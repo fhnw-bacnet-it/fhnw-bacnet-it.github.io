@@ -13,26 +13,26 @@ __[Hands On 3](#hands-on-3)__ demonstrates how to run a BACnet/IT Stack with mor
 
 ## Download
 1. Create a new empty directory __BACnetIT__ and make it the current directory
-2. Download the source code of projects __ApplicationServiceElement__, __TransportWSBinding__, __DirectoryDNSSDBinding__ and __Misc__ 
-__ApplicationServiceElement__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/ApplicationServiceElement.git```  
-__TransportWSBinding__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/TransportWSBinding.git```  
-__DirectoryDNSSDBinding__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/DirectoryDNSSDBinding.git```  
-__Misc__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/Misc```  
+2. Download the source code of projects __ase__, __transport-binding-ws__, __directory-binding-dnssd__ and __samples-and-tests__  
+__ase__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/ase.git```  
+__transport-binding-ws__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
+__directory-binding-dnssd__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
+__samples-and-tests__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git```  
 
 
 
 ## Build
-1. Make __BACnetIT/Misc__ the current directory.
-2. Note that project __Misc__ has dependencies to projects __ApplicationServiceElement__, __TransportWSBinding__ and __DirectoryDNSSDBinding__ so ensure that all projects are stored at the same level in the __BACnetIT__ folder.
-3. Build __Misc__ using Gradle Wrapper:  
+1. Make __BACnetIT/samples-and-tests__ the current directory.
+2. Note that project __samples-and-tests__ has dependencies to projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__ so ensure that all projects are stored at the same level in the __BACnetIT__ folder.
+3. Build __samples-and-tests__ using Gradle Wrapper:  
 ```
   ./gradlew clean build -x test
 ```  
-4. Find all needed dependencies as jar files under __Misc/build/distributions__
+4. Find all needed dependencies as jar files under __samples-and-tests/build/distributions__
 
 
 ## Setup
@@ -57,86 +57,85 @@ int port1 = 8080;
 connectionFactory1.addConnectionClient("ws", new WSConnectionClientFactory());
 connectionFactory1.addConnectionServer("ws", new WSConnectionServerFactory(port1));
 ```
-Create an instance of the Channel class
+Create an instance of the Channel class. Segregate the functionality by casting __channel1__ to the interfaces __ChannelConfiguration__ and __ApplicationService__.
 
 ```java
 Channel channel1 = new Channel();
+ChannelConfiguration channelConfiguration1 = (ChannelConfiguration)channel1;
+ApplicationService applicationService1 = (ApplicationService)channel1;
 ```
-Implement the ChannelListener interface for each simulated BACnet device and the network port object. Pass a keystore configuration to the network port object to identify the stack.
+Implement the ChannelListener interface for each simulated BACnet device and the network port object. Pass a keystore configuration to the network port object to identify the application.
 
 ```java
-BACnetEID device1inStack1 = new BACnetEID(1001);
-BACnetEID device2inStack1 = new BACnetEID(1002);
-KeystoreConfig keystoreConfig1 = new KeystoreConfig([PATH-TO-KEYSTORE],
-        123456, "operationaldevcert");
-NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
+final BACnetEID device1inStack1 = new BACnetEID(1001);
+final BACnetEID device2inStack1 = new BACnetEID(1002);
+final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
 
+final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
 
-channel1.registerChannelListener(new ChannelListener(device1inStack1) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration1.registerChannelListener(new ChannelListener(device1inStack1) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo1.getUri();
-            }
+    
 });
 
-channel1.registerChannelListener(new ChannelListener(device2inStack1) {
-                    @Override
-                    public void onIndication(T_UnitDataIndication tUnitDataIndication,ChannelHandlerContext ctx) {
-                        System.out.println(this.eid.getIdentifierAsString()
-                                + " got an indication" + tUnitDataIndication.getData());
-                    }
+channelConfiguration1.registerChannelListener(new ChannelListener(device2inStack1) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-                    @Override
-                    public void onError(final String cause) {
-                        System.err.println(cause);
-                    }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-                    @Override
-                    public URI getURIfromNPO() {
-                        return npo1.getUri();
-                    }
+   
 });
 ```
 
-Implement the BACnetEntityListener interface to handle Control Messages on application level
+Implement the BACnetEntityListener interface to handle ControlMessages on application level
 
 ```java
-BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
+final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
 
-                    @Override
-                    public void onRemoteAdded(final BACnetEID eid, final URI remoteUri) {
-                        DirectoryService.getInstance().register(eid, remoteUri, false, true);
-                    }
-                    @Override
-                    public void onRemoteRemove(final BACnetEID eid) {
-                        // TODO Auto-generated method stub
-                    }
-                    @Override
-                    public void onLocalRequested(final BACnetEID eid) {
-                        // TODO Auto-generated method stub
-                    }
+            @Override
+            public void onRemoteAdded(final BACnetEID eid,final URI remoteUri) {
+                DirectoryService.getInstance().register(eid, remoteUri, false, true);
+            }
 
-};
-channel1.setEntityListener(bacNetEntityHandler);
+            @Override
+            public void onRemoteRemove(final BACnetEID eid) {
+                // TODO Auto-generated method stub
+            }
+
+            @Override
+            public void onLocalRequested(final BACnetEID eid) {
+                // TODO Auto-generated method stub
+            }
+
+        };
+channelConfiguration1.setEntityListener(bacNetEntityHandler);
 ```
 
 Start the channel passing the connection factory instance containing the transport bindings
 
 ```java
-channel1.initializeAndStart(connectionFactory1);
+channelConfiguration1.initializeAndStart(connectionFactory1);
 ```
 
 
@@ -154,83 +153,80 @@ int port2 = 9090;
 connectionFactory2.addConnectionClient("ws", new WSConnectionClientFactory());
 connectionFactory2.addConnectionServer("ws", new WSConnectionServerFactory(port2));
 ```
-Create an instance of the Channel class
+Create an instance of the Channel class. Segregate the functionality by casting channel1 to the interfaces ChannelConfiguration and ApplicationService.
 
 ```java
-Channel channel2 = new Channel();
+final Channel channel2 = new Channel();
+final ChannelConfiguration channelConfiguration2 = (ChannelConfiguration)channel2;
+// final ApplicationService applicationService2 = (ApplicationService)channel2;
 ```
 Implement the ChannelListener interface for each simulated BACnet device and the stacks network port object. Passing a keystore configuration to the network port object to identify the stack.
 
 ```java
-BACnetEID device1inStack2 = new BACnetEID(2001);
-BACnetEID device2inStack2 = new BACnetEID(2002);
-KeystoreConfig keystoreConfig2 = new KeystoreConfig([PATH-TO-KEYSTORE],
-        123456, "operationaldevcert");
-NetworkPortObj npo2 = new NetworkPortObj("ws", 9090, keystoreConfig2);
+final BACnetEID device1inStack2 = new BACnetEID(2001);
+final BACnetEID device2inStack2 = new BACnetEID(2002);
+final KeystoreConfig keystoreConfig2 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
 
-channel2.registerChannelListener(new ChannelListener(device1inStack2) {
-                    @Override
-                    public void onIndication(T_UnitDataIndication tUnitDataIndication,ChannelHandlerContext ctx) {
-                        System.out.println(this.eid.getIdentifierAsString()
-                                + " got an indication" + tUnitDataIndication.getData());
-                    }
+final NetworkPortObj npo2 = new NetworkPortObj("ws", 9090, keystoreConfig2);
 
-                    @Override
-                    public void onError(final String cause) {
-                        System.err.println(cause);
-                    }
+channelConfiguration2.registerChannelListener(new ChannelListener(device1inStack2) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-                    @Override
-                    public URI getURIfromNPO() {
-                        return npo2.getUri();
-                    }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }  
 });
 
-channel2.registerChannelListener(new ChannelListener(device2inStack2) {
-                    @Override
-                    public void onIndication(T_UnitDataIndication tUnitDataIndication,ChannelHandlerContext ctx) {
-                        System.out.println(this.eid.getIdentifierAsString()
-                                + " got an indication" + tUnitDataIndication.getData());
-                    }
+channelConfiguration2.registerChannelListener(new ChannelListener(device2inStack2) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-                    @Override
-                    public void onError(final String cause) {
-                        System.err.println(cause);
-                    }
-
-                    @Override
-                    public URI getURIfromNPO() {
-                        return npo2.getUri();
-                    }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }   
 });
 ```
 
 Implement the BACnetEntityListener interface to handle Control Messages on application level
 
 ```java
-BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
+final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
 
-                    @Override
-                    public void onRemoteAdded(final BACnetEID eid, final URI remoteUri) {
-                        DirectoryService.getInstance().register(eid, remoteUri, false, true);
-                    }
-                    @Override
-                    public void onRemoteRemove(final BACnetEID eid) {
-                        // TODO Auto-generated method stub
-                    }
-                    @Override
-                    public void onLocalRequested(final BACnetEID eid) {
-                        // TODO Auto-generated method stub
-                    }
+    @Override
+    public void onRemoteAdded(final BACnetEID eid, final URI remoteUri) {
+        DirectoryService.getInstance().register(eid, remoteUri, false, true);
+    }
+
+    @Override
+    public void onRemoteRemove(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void onLocalRequested(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
 };
-channel2.setEntityListener(bacNetEntityHandler2);
+channelConfiguration2.setEntityListener(bacNetEntityHandler2);
 ```
 
 Start the channel passing the connection factory instance containing transport bindings
 
 ```java
-channel2.initializeAndStart(connectionFactory2);
+channelConfiguration2.initializeAndStart(connectionFactory2);
 ```
 
 #### Start the directory service
@@ -282,7 +278,7 @@ T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(new URI("ws://localhos
 Pass the unitDataRequest down to the channel
 
 ```Java
-channel1.doRequest(unitDataRequest);
+applicationService1.doRequest(unitDataRequest);
 ```
 
 device2inStack2 should get an indication from device1inStack1.
@@ -291,193 +287,188 @@ device2inStack2 should get an indication from device1inStack1.
 #### Complete code example
 
 ```java
- final ConnectionFactory connectionFactory1 = new ConnectionFactory();
+final ConnectionFactory connectionFactory1 = new ConnectionFactory();
 
-        final int port1 = 8080;
-        connectionFactory1.addConnectionClient("ws",
-                new WSConnectionClientFactory());
-        connectionFactory1.addConnectionServer("ws",
-                new WSConnectionServerFactory(port1));
-        final Channel channel1 = new Channel();
+final int port1 = 8080;
+connectionFactory1.addConnectionClient("ws",
+        new WSConnectionClientFactory());
+connectionFactory1.addConnectionServer("ws",
+        new WSConnectionServerFactory(port1));
+    
+final Channel channel1 = new Channel();
+final ChannelConfiguration channelConfiguration1 = (ChannelConfiguration)channel1;
+final ApplicationService applicationService1 = (ApplicationService)channel1;
+    
 
-        final BACnetEID device1inStack1 = new BACnetEID(1001);
-        final BACnetEID device2inStack1 = new BACnetEID(1002);
-        final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
+final BACnetEID device1inStack1 = new BACnetEID(1001);
+final BACnetEID device2inStack1 = new BACnetEID(1002);
+final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
 
-        final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
+final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
 
-        channel1.registerChannelListener(new ChannelListener(device1inStack1) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration1.registerChannelListener(new ChannelListener(device1inStack1) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo1.getUri();
-            }
-        });
+    
+});
 
-        channel1.registerChannelListener(new ChannelListener(device2inStack1) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration1.registerChannelListener(new ChannelListener(device2inStack1) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo1.getUri();
-            }
-        });
+   
+});
 
-        final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
+final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
 
-            @Override
-            public void onRemoteAdded(final BACnetEID eid,
-                    final URI remoteUri) {
-                DirectoryService.getInstance().register(eid, remoteUri, false,
-                        true);
-            }
+    @Override
+    public void onRemoteAdded(final BACnetEID eid,
+            final URI remoteUri) {
+        DirectoryService.getInstance().register(eid, remoteUri, false,
+                true);
+    }
 
-            @Override
-            public void onRemoteRemove(final BACnetEID eid) {
-                // TODO Auto-generated method stub
-            }
+    @Override
+    public void onRemoteRemove(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
-            @Override
-            public void onLocalRequested(final BACnetEID eid) {
-                // TODO Auto-generated method stub
-            }
+    @Override
+    public void onLocalRequested(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
-        };
-        channel1.setEntityListener(bacNetEntityHandler);
+};
+channelConfiguration1.setEntityListener(bacNetEntityHandler);
 
-        channel1.initializeAndStart(connectionFactory1);
+channelConfiguration1.initializeAndStart(connectionFactory1);
 
-        final ConnectionFactory connectionFactory2 = new ConnectionFactory();
+final ConnectionFactory connectionFactory2 = new ConnectionFactory();
 
-        final int port2 = 9090;
-        connectionFactory2.addConnectionClient("ws",
-                new WSConnectionClientFactory());
-        connectionFactory2.addConnectionServer("ws",
-                new WSConnectionServerFactory(port2));
+final int port2 = 9090;
+connectionFactory2.addConnectionClient("ws",
+        new WSConnectionClientFactory());
+connectionFactory2.addConnectionServer("ws",
+        new WSConnectionServerFactory(port2));
 
-        final Channel channel2 = new Channel();
+final Channel channel2 = new Channel();
+final ChannelConfiguration channelConfiguration2 = (ChannelConfiguration)channel2;
+// final ApplicationService applicationService2 = (ApplicationService)channel2;
+    
 
-        final BACnetEID device1inStack2 = new BACnetEID(2001);
-        final BACnetEID device2inStack2 = new BACnetEID(2002);
-        final KeystoreConfig keystoreConfig2 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
+final BACnetEID device1inStack2 = new BACnetEID(2001);
+final BACnetEID device2inStack2 = new BACnetEID(2002);
+final KeystoreConfig keystoreConfig2 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
 
-        final NetworkPortObj npo2 = new NetworkPortObj("ws", 9090, keystoreConfig2);
+final NetworkPortObj npo2 = new NetworkPortObj("ws", 9090, keystoreConfig2);
 
-        channel2.registerChannelListener(new ChannelListener(device1inStack2) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration2.registerChannelListener(new ChannelListener(device1inStack2) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo2.getUri();
-            }
-        });
+    
+});
 
-        channel2.registerChannelListener(new ChannelListener(device2inStack2) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration2.registerChannelListener(new ChannelListener(device2inStack2) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo2.getUri();
-            }
-        });
+   
+});
 
-        final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
+final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
 
-            @Override
-            public void onRemoteAdded(final BACnetEID eid,
-                    final URI remoteUri) {
-                DirectoryService.getInstance().register(eid, remoteUri, false,
-                        true);
-            }
+    @Override
+    public void onRemoteAdded(final BACnetEID eid,
+            final URI remoteUri) {
+        DirectoryService.getInstance().register(eid, remoteUri, false,
+                true);
+    }
 
-            @Override
-            public void onRemoteRemove(final BACnetEID eid) {
-                // TODO Auto-generated method stub
-            }
+    @Override
+    public void onRemoteRemove(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
-            @Override
-            public void onLocalRequested(final BACnetEID eid) {
-                // TODO Auto-generated method stub
-            }
+    @Override
+    public void onLocalRequested(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
-        };
-        channel2.setEntityListener(bacNetEntityHandler2);
+};
+channelConfiguration2.setEntityListener(bacNetEntityHandler2);
 
-        channel2.initializeAndStart(connectionFactory2);
+channelConfiguration2.initializeAndStart(connectionFactory2);
 
-        final DiscoveryConfig ds = new DiscoveryConfig(
-                "DNSSD", "[DNS IP]",
-                "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
-                "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
+final DiscoveryConfig ds = new DiscoveryConfig(
+        "DNSSD", "[DNS IP]",
+        "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
+        "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
 
-        try {
-            DirectoryService.init();
-            DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
+try {
+    DirectoryService.init();
+    DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
 
-        } catch (final Exception e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
+} catch (final Exception e1) {
+    // TODO Auto-generated catch block
+    e1.printStackTrace();
+}
 
-        final ReadPropertyRequest readRequest = new ReadPropertyRequest(
-                new BACnetObjectIdentifier(BACnetObjectType.analogValue, 1),
-                BACnetPropertyIdentifier.presentValue);
-        
+final ReadPropertyRequest readRequest = new ReadPropertyRequest(
+        new BACnetObjectIdentifier(BACnetObjectType.analogValue, 1),
+        BACnetPropertyIdentifier.presentValue);
+    
 
-        final ByteQueue byteQueue = new ByteQueue();
-        readRequest.write(byteQueue);
-        final TPDU tpdu = new TPDU(device1inStack1, device1inStack2,
-                byteQueue.popAll());
+final ByteQueue byteQueue = new ByteQueue();
+readRequest.write(byteQueue);
+final TPDU tpdu = new TPDU(device1inStack1, device1inStack2,
+        byteQueue.popAll());
 
-        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
-                new URI("ws://localhost:9090"), tpdu, 1, true, null);
+final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
+        new URI("ws://localhost:9090"), tpdu, 1, true, null);
 
-        channel1.doRequest(unitDataRequest);
+applicationService1.doRequest(unitDataRequest);
 ```
 
 
@@ -490,30 +481,30 @@ Hands on 2 demonstrates how to setup one BACnet/IT Stack on localhost with two B
 
 ## Download
 1. Create a new empty directory __BACnetIT__ and make it the current directory
-2. Download the source code of projects __ApplicationServiceElement__, __TransportWSBinding__ and __DirectoryDNSSDBinding__.  
-__ApplicationServiceElement__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/ApplicationServiceElement.git```  
-__TransportWSBinding__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/TransportWSBinding.git```  
-__DirectoryDNSSDBinding__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/DirectoryDNSSDBinding.git```  
+2. Download the source code of projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__.  
+__ase__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/ase.git```  
+__transport-binding-ws__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
+__directory-binding-dnssd__ project:  
+```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
 
 
 ## Build
-1. Make __BACnetIT/TransportWSBinding__ the current directory.
-2. Note that project __TransportWSBinding__ has a dependency to project __ApplicationServiceElement__, so ensure that both projects are stored at the same level in the __BACnetIT__ folder.
-3. Build __TransportWSBinding__ using Gradle Wrapper:  
+1. Make __BACnetIT/transport-binding-ws__ the current directory.
+2. Note that project __transport-binding-ws__ has a dependency to project __ase__, so ensure that both projects are stored at the same level in the __BACnetIT__ folder.
+3. Build __transport-binding-ws__ using Gradle Wrapper:  
 ```
   ./gradlew clean build -x test
 ```  
 
-4. Note that project __DirectoryDNSSDBinding__ has a dependency to project __ApplicationServiceElement__ as well, so ensure that both projects are stored at the same level in the __BACnetIT__ folder.
-5. Build __DirectoryDNSSDBinding__ accordingly  
+4. Note that project __directory-binding-dnssd__ has a dependency to project __ase__ as well, so ensure that both projects are stored at the same level in the __BACnetIT__ folder.
+5. Build __directory-binding-dnssd__ accordingly  
 ```
-cd ../DirectoryDNSSDBinding; ./gradlew build -x test;
+cd ../directory-binding-dnssd; ./gradlew build -x test;
 ```
-6. Find all needed dependencies as jar files under __DirectoryDNSSDBinding/build/distributions__ and
-__TransportWSBinding/build/distributions__
+6. Find all needed dependencies as jar files under __directory-binding-dnssd/build/distributions__ and
+__transport-binding-ws/build/distributions__
 
 
 ## Setup
@@ -524,113 +515,109 @@ This example doesn't use BACnet4j primitives, instead a WhoIsRequest is represen
 Ensure the builded jars are in java class path.
 
 #### Setup stack on localhost at port 8080
+Consider [Hands On 1](#hands-on-1) to get more detailed information about the code below.
 
 ```java
- final ConnectionFactory connectionFactory = new ConnectionFactory();
+final ConnectionFactory connectionFactory = new ConnectionFactory();
 
-        final int port = 8080;
-        connectionFactory.addConnectionClient("ws",
-                new WSConnectionClientFactory());
-        connectionFactory.addConnectionServer("ws",
-                new WSConnectionServerFactory(port));
-        final Channel channel1 = new Channel();
+final int port = 8080;
+connectionFactory.addConnectionClient("ws", new WSConnectionClientFactory());
+connectionFactory.addConnectionServer("ws", new WSConnectionServerFactory(port));
+    
+final Channel channel1 = new Channel();
+final ChannelConfiguration channelConfiguration1 = (ChannelConfiguration)channel1;
+final ApplicationService applicationService1 = (ApplicationService)channel1;
 
-        final BACnetEID device1inStack1 = new BACnetEID(1001);
-        final BACnetEID device2inStack1 = new BACnetEID(1002);
-        final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
-        final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
+final BACnetEID device1inStack1 = new BACnetEID(1001);
+final BACnetEID device2inStack1 = new BACnetEID(1002);
+final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
+final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
 
-        channel1.registerChannelListener(new ChannelListener(device1inStack1) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration1.registerChannelListener(new ChannelListener(device1inStack1) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo1.getUri();
-            }
-        });
+   
+});
 
-        channel1.registerChannelListener(new ChannelListener(device2inStack1) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication" + tUnitDataIndication.getData());
-            }
+channelConfiguration1.registerChannelListener(new ChannelListener(device2inStack1) {
+    @Override
+    public void onIndication(
+            final T_UnitDataIndication tUnitDataIndication,
+            final ChannelHandlerContext ctx) {
+        System.out.println(this.eid.getIdentifierAsString()
+                + " got an indication" + tUnitDataIndication.getData());
+    }
 
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
+    @Override
+    public void onError(final String cause) {
+        System.err.println(cause);
+    }
 
-            @Override
-            public URI getURIfromNPO() {
-                return npo1.getUri();
-            }
-        });
+   
+});
 
-        final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
+final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
 
-            @Override
-            public void onRemoteAdded(final BACnetEID eid,
-                    final URI remoteUri) {
-                DirectoryService.getInstance().register(eid, remoteUri, false,
-                        true);
-            }
+    @Override
+    public void onRemoteAdded(final BACnetEID eid,
+            final URI remoteUri) {
+        DirectoryService.getInstance().register(eid, remoteUri, false,
+                true);
+    }
 
-            @Override
-            public void onRemoteRemove(final BACnetEID eid) {
-                // TODO Auto-generated method stub
-            }
+    @Override
+    public void onRemoteRemove(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
-            @Override
-            public void onLocalRequested(final BACnetEID eid) {
-                // TODO Auto-generated method stub
-            }
+    @Override
+    public void onLocalRequested(final BACnetEID eid) {
+        // TODO Auto-generated method stub
+    }
 
-        };
-        channel1.setEntityListener(bacNetEntityHandler);
+};
+channelConfiguration1.setEntityListener(bacNetEntityHandler);
 
-        channel1.initializeAndStart(connectionFactory);
+channelConfiguration1.initializeAndStart(connectionFactory);
 
-      
+  
 
-        final DiscoveryConfig ds = new DiscoveryConfig(
-                "DNSSD", "[DNS IP]",
-                "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
-                "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
+final DiscoveryConfig ds = new DiscoveryConfig(
+        "DNSSD", "86.119.39.127",
+        "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
+        "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
 
-        try {
-            DirectoryService.init();
-            DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
+try {
+    DirectoryService.init();
+    DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
 
-        } catch (final Exception e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
-        }
-        
-       
-        
-        // Get the byte stream of an WhoIsRequest()
-        byte[] whoIsRequest = new byte[]{(byte)0x1e,(byte)0x8e,(byte)0x8f,(byte)0x1f};
-        
-        final TPDU tpdu = new TPDU(device1inStack1, device2inStack1, whoIsRequest);
+} catch (final Exception e1) {
+    // TODO Auto-generated catch block
+    e1.printStackTrace();
+}
+    
+   
+    
+// Get the byte stream of an WhoIsRequest()
+byte[] whoIsRequest = new byte[]{(byte)0x1e,(byte)0x8e,(byte)0x8f,(byte)0x1f};
+    
+final TPDU tpdu = new TPDU(device1inStack1, device2inStack1, whoIsRequest);
 
-        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
-                new URI("ws://localhost:8080"), tpdu, 1, true, null);
+final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
+        new URI("ws://localhost:8080"), tpdu, 1, true, null);
 
-        channel1.doRequest(unitDataRequest);
+applicationService1.doRequest(unitDataRequest);
 ```
 
 
