@@ -2,6 +2,7 @@
 
 ## Logical View
 <img src="images/LogicalView.png" width="40%">
+
 ## Developer View
 <img src="images/DeveloperView.png" width="40%">
 
