@@ -8,25 +8,28 @@
 
 # Four Hands on
 
-__[Hands On 1](#hands-on-1)__ demonstrates how to to setup two BACnet/IT Stacks on localhost with each two BACnet devices. A device from stack 1 sends a ReadPropertyRequest to a device from stack 2. [BACnet4J](https://github.com/empeeoh/BACnet4J) is used to get the byte array of the ReadPropertyRequest. The destinations address is already resolved (localhost), nevertheless the usage of a directory binding is shown.
+__[Hands On 1](#hands-on-1)__ demonstrates how to to setup two BACnet/IT ASEs on localhost (port 8080 and 9090) with each two BACnet devices (Application) and each with one configured Transport Binding (WebSocket). 
+A device from application 1 sends a ReadPropertyRequest to a device from application 2. [BACnet4J](https://github.com/empeeoh/BACnet4J) is used to get the byte representation of the ReadPropertyRequest. The destinations URI is already resolved (ws://localhost:9090), nevertheless the usage of a directory binding is shown.
 
-__[Hands On 2](#hands-on-2)__ demonstrates how to setup one BACnet/IT Stack on localhost with two BACnet devices. One BACnet device sends a WhoIsRequest to the other device. The WhoIsRequest is represented as a byte array, therefore no dependencies to other projects like BACnet4J (to represent BACnet service) is needed. The destinations address is already resolved (localhost), nevertheless the usage of a directory binding is shown.
+__[Hands On 2](#hands-on-2)__ demonstrates how to setup one BACnet/IT ASE on localhost with two BACnet devices (Application). One device sends a WhoIsRequest to the other device. The WhoIsRequest is provided as a byte array, therefore no dependencies to other projects like BACnet4J are needed. The destinations URI is already resolved (ws://localhost:8080), nevertheless the usage of a directory binding is shown.
 
 
-__[Hands On 3](#hands-on-3)__ demonstrates how to run a BACnet/IT Stack with more than one transport binding.
+__[Hands On 3](#hands-on-3)__ demonstrates how to run a BACnet/IT ASE with more than one Transport Binding.
 
-__[Hands On 4](#hands-on-4)__ demonstrates how to communicate between devices with a prior BACnet/EID resolution.
+__[Hands On 4](#hands-on-4)__ demonstrates how to communicate between devices with a prior BACnet/EID to URI resolution.
 
 
 
 # Hands on 1
 ## Purpose
-Hands On 1 demonstrates how to to setup two BACnet/IT Stacks on localhost with each two BACnet devices. A device from stack 1 sends a ReadPropertyRequest to a device from stack 2. BACnet4J (https://github.com/empeeoh/BACnet4J) is used to get the byte array of the ReadPropertyRequest. The destinations address is already resolved (localhost), nevertheless the usage of a directory binding is shown.
+Hands On 1 demonstrates how to to setup two BACnet/IT ASEs on localhost (port 8080 and 9090) with each two BACnet devices (Application) and each with one configured Transport Binding (WebSocket). 
+A device from application 1 sends a ReadPropertyRequest to a device from application 2. [BACnet4J](https://github.com/empeeoh/BACnet4J) is used to get the byte representation of the ReadPropertyRequest. The destinations URI is already resolved (ws://localhost:9090), nevertheless the usage of a directory binding is shown.
 
 
 ## Download
-1. Create a new empty directory __BACnetIT__ and make it the current directory
-2. Download the source code of projects __ase__, __transport-binding-ws__, __directory-binding-dnssd__ and __samples-and-tests__  
+1. Create a new empty directory __BACnetIT__ and make it the current directory.
+2. Download the source code of projects __ase__, __transport-binding-ws__, __directory-binding-dnssd__ and __samples-and-tests__.
+3. Ensure all downloaded projects are stored flat (horizontally) under __BACnetIT__.  
 __ase__ project:  
 ```git clone https://github.com/fhnw-BACnet-IT/ase.git```  
 __transport-binding-ws__ project:  
@@ -34,13 +37,22 @@ __transport-binding-ws__ project:
 __directory-binding-dnssd__ project:  
 ```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
 __samples-and-tests__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git```  
+```git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git```
 
+Alternatively use the following commands to checkout all the projects.  
+__MAC OSX:__
+
+```java
+mkdir ~/Desktop/BACnetIT/; cd ~/Desktop/BACnetIT/; git clone https://github.com/fhnw-BACnet-IT/ase.git; git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git; git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git; git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git;
+```
+__LINUX:__
+
+__WINDOWS:__
 
 
 ## Build
 1. Make __BACnetIT/samples-and-tests__ the current directory.
-2. Note that project __samples-and-tests__ has dependencies to projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__ so ensure that all projects are stored at the same level in the __BACnetIT__ folder.
+2. Note that project __samples-and-tests__ has dependencies to projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__, thus ensure that all projects are stored at the same level in the __BACnetIT__ folder.
 3. Build __samples-and-tests__ using Gradle Wrapper:  
 ```
   ./gradlew clean build -x test
@@ -241,19 +253,20 @@ channelConfiguration2.initializeAndStart(connectionFactory2);
 ```
 
 #### Start the directory service
+The directory service isn't used in this example. Note that we pass the DNSSD Directory Binding.  
+
 ```java
-final DiscoveryConfig ds = new DiscoveryConfig(
-                "DNSSD", "[DNS IP]",
-                "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
-                "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
+ final DiscoveryConfig ds = new DiscoveryConfig(
+		"DNSSD", "86.119.39.127",
+		"itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
+		"dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
 
 try {
-                DirectoryService.init();
-                DirectoryService.getInstance().setDns(ds);
+	DirectoryService.init();
+	DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
 
 } catch (final Exception e1) {
-                // TODO Auto-generated catch block
-                e1.printStackTrace();
+	e1.printStackTrace();
 }
 ```
 
@@ -471,12 +484,12 @@ final ReadPropertyRequest readRequest = new ReadPropertyRequest(
         BACnetPropertyIdentifier.presentValue);
     
 
-final ByteQueue byteQueue = new ByteQueue();
+ByteQueue byteQueue = new ByteQueue();
 readRequest.write(byteQueue);
-final TPDU tpdu = new TPDU(device1inStack1, device1inStack2,
+TPDU tpdu = new TPDU(device1inStack1, device1inStack2,
         byteQueue.popAll());
 
-final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
+T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
         new URI("ws://localhost:9090"), tpdu, 1, true, null);
 
 applicationService1.doRequest(unitDataRequest);
@@ -486,7 +499,7 @@ applicationService1.doRequest(unitDataRequest);
 # Hands on 2
 
 ## Purpose
-Hands on 2 demonstrates how to setup one BACnet/IT Stack on localhost with two BACnet devices. One BACnet device sends a WhoIsRequest to the other device. The WhoIsRequest is represented as a byte array, therefore no dependencies to other projects like BACnet4J (to represent BACnet service) is needed. The destinations address is already resolved (localhost), nevertheless the usage of a directory binding is shown.
+Hands on 2 demonstrates how to setup one BACnet/IT ASE on localhost with two BACnet devices (Application). One device sends a WhoIsRequest to the other device. The WhoIsRequest is provided as a byte array, therefore no dependencies to other projects like BACnet4J are needed. The destinations URI is already resolved (ws://localhost:8080), nevertheless the usage of a directory binding is shown.
 
 
 
@@ -499,6 +512,16 @@ __transport-binding-ws__ project:
 ```git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
 __directory-binding-dnssd__ project:  
 ```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
+
+Alternatively use the following commands to checkout all the projects.  
+__MAC OSX:__
+
+```java
+mkdir ~/Desktop/BACnetIT/; cd ~/Desktop/BACnetIT/; git clone https://github.com/fhnw-BACnet-IT/ase.git; git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git; git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git;
+```
+__LINUX:__
+
+__WINDOWS:__
 
 
 ## Build
@@ -519,8 +542,6 @@ __transport-binding-ws/build/distributions__
 
 
 ## Setup
-Setup a BACnet/IT Stack using Websocket as Transport Binding.  
-This example doesn't use BACnet4j primitives, instead a WhoIsRequest is represented as a byte array.
 
 ### Preparation
 Ensure the builded jars are in java class path.
@@ -1030,7 +1051,7 @@ Other non-BDS devices have to register themselves by sending a AddListElementReq
 
 ```
 __device1inStack1 is BDS__, therefore its __onIndication__ method has to handle the __AddListElementRequest from device1inStack2__. (The onIndication method of device1inStack1 has to register __device1inStack2__ into the Name System).
-Note the implemenation [above](#####BDS-must-handle-AddListElementRequests).
+Note the implementation [above](#####BDS-must-handle-AddListElementRequests).
 
 A short break to ensure __device1inStack1(BDS)__ had enough time to register __device1inStack2__ into the Name System
 
