@@ -1,144 +1,362 @@
-# BACnet/IT Samples
+# BACnet/IT Tutorial
 
-## Logical View
-<img src="images/LogicalView.png" width="40%">
+In this tutorial you will learn how to develop applications using the new BACnet/IT stack.
 
-## Developer View
-<img src="images/DeveloperView.png" width="40%">
-
-# Four Hands on
-
-__[Hands On 1](#hands-on-1)__ demonstrates how to to setup two BACnet/IT ASEs on localhost (port 8080 and 9090) with each two BACnet devices (Application) and each with one configured Transport Binding (WebSocket). 
-A device from application 1 sends a ReadPropertyRequest to a device from application 2. [BACnet4J](https://github.com/empeeoh/BACnet4J) is used to get the byte representation of the ReadPropertyRequest. The destinations URI is already resolved (ws://localhost:9090), nevertheless the usage of a directory binding is shown.
-
-__[Hands On 2](#hands-on-2)__ demonstrates how to setup one BACnet/IT ASE on localhost with two BACnet devices (Application). One device sends a WhoIsRequest to the other device. The WhoIsRequest is provided as a byte array, therefore no dependencies to other projects like BACnet4J are needed. The destinations URI is already resolved (ws://localhost:8080), nevertheless the usage of a directory binding is shown.
-
-
-__[Hands On 3](#hands-on-3)__ demonstrates how to run a BACnet/IT ASE with more than one Transport Binding.
-
-__[Hands On 4](#hands-on-4)__ demonstrates how to communicate between devices with a prior BACnet/EID to URI resolution.
+## What we do
+folgt.
 
 
 
-# Hands on 1
-## Purpose
-Hands On 1 demonstrates how to to setup two BACnet/IT ASEs on localhost (port 8080 and 9090) with each two BACnet devices (Application) and each with one configured Transport Binding (WebSocket). 
-A device from application 1 sends a ReadPropertyRequest to a device from application 2. [BACnet4J](https://github.com/empeeoh/BACnet4J) is used to get the byte representation of the ReadPropertyRequest. The destinations URI is already resolved (ws://localhost:9090), nevertheless the usage of a directory binding is shown.
+
+## Prerequisites and BACnet/IT open-source binaries
+- Latest [JAVA JDK 8](http://www.oracle.com/technetwork/java/javase/downloads/index.html) (this tutorial got tested with 1.8.0_102-b14)
+- An Integrated Development Environment like [Eclipse](http://www.eclipse.org) or [IntelliJ](https://www.jetbrains.com/idea/)
+- The BACnet/IT open-source binaries
+
+For the following Tutorial Eclipse is used.
+
+## Eclipse Configurations
+1. Create a new Java Project in Eclipse.
+
+<img src="images/JavaProject.png">
+
+2. Name the new Project __BACnetITApplication__ and ensure Java 8 is choosen as executation JRE.
+
+<img src="images/projectname.png" width="70%">
+
+3. Create a folder __libs__ within the project __BACnetITApplication__
+
+<img src="images/addfolder.png" width="70%">
+
+<img src="images/nameitlibs.png" width="70%">
+
+4. Open the project properties
+
+<img src="images/properties.png" width="70%">
+
+5. Click on __Add JARs...__ in the menu __Java Build Path/Libraries__
+
+<img src="images/addJars.png" width="70%">
+
+6. Add all the jar files by selecting.
+
+<img src="images/selectJars.png" width="70%">
 
 
-## Download
-1. Create a new empty directory __BACnetIT__ and make it the current directory.
-2. Download the source code of projects __ase__, __transport-binding-ws__, __directory-binding-dnssd__ and __samples-and-tests__.
-3. Ensure all downloaded projects are stored flat (horizontally) under __BACnetIT__.  
-__ase__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/ase.git```  
-__transport-binding-ws__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
-__directory-binding-dnssd__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
-__samples-and-tests__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git```
+## Create an application
 
-Alternatively use the following commands to checkout all the projects.  
-__MAC OSX:__
-
-```java
-mkdir ~/Desktop/BACnetIT/; cd ~/Desktop/BACnetIT/; git clone https://github.com/fhnw-BACnet-IT/ase.git; git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git; git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git; git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git;
-```
-__LINUX:__
-
-__WINDOWS:__
+To demonstrate a working setup we create two applications each ontop of its own stack. Further a Configurator is needed. Therefore create three classes: __Configurator.java__, __Application1.java__ and __Application2.java__.
 
 
-## Build
-1. Make __BACnetIT/samples-and-tests__ the current directory.
-2. Note that project __samples-and-tests__ has dependencies to projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__, thus ensure that all projects are stored at the same level in the __BACnetIT__ folder.
-3. Build __samples-and-tests__ using Gradle Wrapper:  
-```
-  ./gradlew clean build -x test
-```  
-4. Find all needed dependencies as jar files under __samples-and-tests/build/distributions__
 
+### Applications
+1. Ensure you created two classes in the default package __Application1.java__ and __Application2.java__
 
-## Setup
+2. Lets start implementing __Application1.java__
 
-
-### Preparation
-Ensure the builded jars are in java class path.
-
-#### Setup stack 1 on localhost at port 8080
-
-Create an instance of the ConnectionFactory class
+Note tha java inline comments for further explanation.
 
 ```java
-ConnectionFactory connectionFactory1 = new ConnectionFactory();
-```  
-Add a Transport Binding for outgoing and incoming communication  
+// Ensure to import the following classes
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.LinkedList;
+import java.util.List;
+import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
+import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
+import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
+import ch.fhnw.bacnetit.ase.encoding.api.TPDU;
+import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
+import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataRequest;
+import ch.fhnw.bacnetit.samplesandtests.deviceobjects.BACnetObjectIdentifier;
+import ch.fhnw.bacnetit.samplesandtests.deviceobjects.BACnetObjectType;
+import ch.fhnw.bacnetit.samplesandtests.deviceobjects.BACnetPropertyIdentifier;
+import ch.fhnw.bacnetit.samplesandtests.encoding.asdu.ASDU;
+import ch.fhnw.bacnetit.samplesandtests.encoding.asdu.ComplexACK;
+import ch.fhnw.bacnetit.samplesandtests.encoding.asdu.IncomingRequestParser;
+import ch.fhnw.bacnetit.samplesandtests.encoding.type.constructed.ServicesSupported;
+import ch.fhnw.bacnetit.samplesandtests.encoding.util.ByteQueue;
+import ch.fhnw.bacnetit.samplesandtests.service.confirmed.ReadPropertyRequest;
 
-```java
-int port1 = 8080;
-connectionFactory1.addConnectionClient("ws", new WSConnectionClientFactory());
-connectionFactory1.addConnectionServer("ws", new WSConnectionServerFactory(port1));
-```
-Create an instance of the Channel class. Segregate the functionality by casting __channel1__ to the interfaces __ChannelConfiguration__ and __ApplicationService__.
+/**
+ * Simulating a BACnet/IT application
+ * @author IMVS, FHNW
+ *
+ */
+public class Application1 {
 
-```java
-Channel channel1 = new Channel();
-ChannelConfiguration channelConfiguration1 = (ChannelConfiguration)channel1;
-ApplicationService applicationService1 = (ApplicationService)channel1;
-```
-Implement the ChannelListener interface for each simulated BACnet device and the network port object. Pass a keystore configuration to the network port object to identify the application.
-
-```java
-final BACnetEID device1inStack1 = new BACnetEID(1001);
-final BACnetEID device2inStack1 = new BACnetEID(1002);
-final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
-
-final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
-
-channelConfiguration1.registerChannelListener(new ChannelListener(device1inStack1) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-    
-});
-
-channelConfiguration1.registerChannelListener(new ChannelListener(device2inStack1) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
+    // applicationService is the applications view of the stack. 
+    // applicationService is used to send BACnet messages to other devices.
+    // The configurator class will pass the applicationService, as shown later in the T
+    final private ApplicationService applicationService;
    
-});
-```
+    // devices is a list of simulated bacnet devices. 
+    // Application 1 will simulate two devices with the BACnetEIDs 1001 and 1002. 
+    final public List<ChannelListener> devices = new LinkedList<ChannelListener>();
 
-Implement the BACnetEntityListener interface to handle ControlMessages on application level
-
-```java
-final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
+    /**
+     * Constructor of class Application1
+     * @param applicationService, the applicationService gets passed from the Configurator.
+     */
+    public Application1(ApplicationService applicationService) {
+        this.applicationService = applicationService;
+        
+        // Adding a simulated bacnet device, with bacneteid 1001, to the list of devices in application1.
+        // To simulate a bacnet device, an anonymous class extending ChannelListener gets implemented.
+        // We have to implement the two abstract methods onIndication and onError
+        devices.add(new ChannelListener(new BACnetEID(1001)) {
 
             @Override
-            public void onRemoteAdded(final BACnetEID eid,final URI remoteUri) {
-                DirectoryService.getInstance().register(eid, remoteUri, false, true);
+            public void onError(String arg0) {
+                // TODO Auto-generated method stub
+
+            }
+
+            /**
+             * Application 1 will send a ReadPropertyRequest to Application 2. 
+             * Application 2 will response to the request. 
+             * Therefore Application 1 has to handle such a response.
+             */
+            @Override
+            public void onIndication(T_UnitDataIndication arg0,
+                    Object context) {
+                // Dummy Handling of a bacnet message indication
+                System.out.println("Application1 got an indication");
+                System.out.println("************\nReceived Value: "
+                        + ((ComplexACK) getServiceFromBody(
+                                arg0.getData().getBody())).getService()
+                                        .toString().split("\\(")[1]
+                                                .split("\\)")[0]
+                        + "\n************");
+
+            }
+        });
+        
+        // Adding a simulated bacnet device, with bacneteid 1002, to the list of devices in application1.
+        // To simulate a bacnet device, an anonymous class extending ChannelListener gets implemented.
+        // We have to implement the two abstract methods onIndication and onError
+        devices.add(new ChannelListener(new BACnetEID(1002)) {
+
+            @Override
+            public void onError(String arg0) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void onIndication(T_UnitDataIndication arg0,
+                    Object context) {
+                // TODO Auto-generated method stub
+
+            }
+
+        });
+    }
+
+    /**
+     * sendReadPropertyRequest() sends a ReadRequestProperty to a given destination.
+     * To represent such a ReadPropertyRequest BACnet4J is used.
+     * Note that the TPDU constructor demands a byte array that represents the BACnet service.
+     * Feel free to provide the byte array without the usage of BACnet4J.
+     * @throws URISyntaxException
+     */
+    public void sendReadPropertyRequest() throws URISyntaxException {
+        final ReadPropertyRequest readRequest = new ReadPropertyRequest(
+                new BACnetObjectIdentifier(BACnetObjectType.analogValue, 1),
+                BACnetPropertyIdentifier.presentValue);
+        final ByteQueue byteQueue = new ByteQueue();
+        readRequest.write(byteQueue);
+        final TPDU tpdu = new TPDU(new BACnetEID(1001), new BACnetEID(2001),
+                byteQueue.popAll());
+
+        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
+                new URI("ws://localhost:9090"), tpdu, 1, true, null);
+
+        applicationService.doRequest(unitDataRequest);
+
+    }
+    
+    /**
+     * getServiceFromBody() is a helper method to interpret received bacnet messages.
+     * @param body
+     * @return
+     */
+    private ASDU getServiceFromBody(final byte[] body) {
+        final ByteQueue queue = new ByteQueue(body);
+        final ServicesSupported servicesSupported = new ServicesSupported();
+        servicesSupported.setAll(true);
+        final IncomingRequestParser parser = new IncomingRequestParser(
+                servicesSupported, queue);
+        ASDU request = null;
+
+        try {
+            request = parser.parse();
+        } catch (final Exception e) {
+            System.out.println(e);
+        }
+        return request;
+    }
+
+}
+
+
+```
+2. Lets start implementing __Application2.java__
+
+```java
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.LinkedList;
+import java.util.List;
+
+import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
+import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
+import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
+import ch.fhnw.bacnetit.ase.encoding.api.TPDU;
+import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
+import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataRequest;
+
+import ch.fhnw.bacnetit.samplesandtests.deviceobjects.BACnetObjectIdentifier;
+import ch.fhnw.bacnetit.samplesandtests.deviceobjects.BACnetObjectType;
+import ch.fhnw.bacnetit.samplesandtests.deviceobjects.BACnetPropertyIdentifier;
+import ch.fhnw.bacnetit.samplesandtests.encoding.asdu.ASDU;
+import ch.fhnw.bacnetit.samplesandtests.encoding.asdu.ConfirmedRequest;
+import ch.fhnw.bacnetit.samplesandtests.encoding.asdu.IncomingRequestParser;
+import ch.fhnw.bacnetit.samplesandtests.encoding.type.constructed.ServicesSupported;
+import ch.fhnw.bacnetit.samplesandtests.encoding.type.primitive.Real;
+import ch.fhnw.bacnetit.samplesandtests.encoding.type.primitive.UnsignedInteger;
+import ch.fhnw.bacnetit.samplesandtests.encoding.util.ByteQueue;
+import ch.fhnw.bacnetit.samplesandtests.service.acknowledgment.ReadPropertyAck;
+import ch.fhnw.bacnetit.samplesandtests.service.confirmed.ReadPropertyRequest;
+import ch.fhnw.bacnetit.samplesandtests.util.BytesUtil;
+
+public class Application2 {
+    final private ApplicationService applicationService;
+    final private int value = 2323;
+
+    final public List<ChannelListener> devices = new LinkedList<ChannelListener>();
+
+    public Application2(ApplicationService applicationService) {
+        this.applicationService = applicationService;
+
+        devices.add(new ChannelListener(new BACnetEID(2001)) {
+
+            @Override
+            public void onError(String arg0) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void onIndication(T_UnitDataIndication arg0,
+                    Object context) {
+                // Dummy Handling of an indication
+                System.out.println("Application2 got an indication");
+                ASDU msg = getServiceFromBody(arg0.getData().getBody());
+
+                if (msg instanceof ConfirmedRequest && ((ConfirmedRequest) msg)
+                        .getServiceRequest() instanceof ReadPropertyRequest) {
+
+                    // Prepare DUMMY answer
+                    final ByteQueue byteQueue = new ByteQueue();
+                    new ReadPropertyAck(
+                            new BACnetObjectIdentifier(
+                                    BACnetObjectType.analogValue, 1),
+                            BACnetPropertyIdentifier.presentValue,
+                            new UnsignedInteger(1), new Real(value))
+                                    .write(byteQueue);
+                    ;
+
+                    // Send answer
+                    System.out.println("send:"
+                            + BytesUtil.bytesToHex(byteQueue.peekAll()));
+                    final TPDU tpdu = new TPDU(new BACnetEID(2001),
+                            new BACnetEID(1001), byteQueue.popAll());
+
+                    T_UnitDataRequest unitDataRequest;
+                    try {
+                        unitDataRequest = new T_UnitDataRequest(
+                                new URI("ws://localhost:8080"), tpdu, 1, false,
+                                null);
+                        applicationService.doRequest(unitDataRequest);
+                    } catch (URISyntaxException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+
+            }
+        });
+
+        devices.add(new ChannelListener(new BACnetEID(2002)) {
+
+            @Override
+            public void onError(String arg0) {
+                // TODO Auto-generated method stub
+
+            }
+
+            @Override
+            public void onIndication(T_UnitDataIndication arg0,
+                    Object context) {
+                // TODO Auto-generated method stub
+            }
+        });
+    }
+
+    private ASDU getServiceFromBody(final byte[] body) {
+        final ByteQueue queue = new ByteQueue(body);
+        final ServicesSupported servicesSupported = new ServicesSupported();
+        servicesSupported.setAll(true);
+        final IncomingRequestParser parser = new IncomingRequestParser(
+                servicesSupported, queue);
+        ASDU request = null;
+
+        try {
+            request = parser.parse();
+        } catch (final Exception e) {
+            System.out.println(e);
+        }
+        return request;
+    }
+
+}
+
+```
+
+
+3. Lets start implementing __Configurator.java__
+
+```java
+import java.net.URI;
+import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
+import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
+import ch.fhnw.bacnetit.ase.application.transaction.api.*;
+import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
+import ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService;
+import ch.fhnw.bacnetit.ase.network.transport.api.*;
+import ch.fhnw.bacnetit.directorybinding.dnssd.api.DNSSD;
+import ch.fhnw.bacnetit.transportbinding.ws.incoming.api.*;
+import ch.fhnw.bacnetit.transportbinding.ws.outgoing.api.*;
+
+public class Configurator {
+
+    public static void main(String[] args) {
+
+        /*
+         *********************** SETUP STACK 1 ***********************
+         */
+        final Channel channel1 = ChannelFactory.getInstance();
+        final ChannelConfiguration channelConfiguration1 = channel1;
+
+        // Configure BACnetEntity Listener to handle Control Messages
+        final BACnetEntityListener bacNetEntityHandler1 = new BACnetEntityListener() {
+
+            @Override
+            public void onRemoteAdded(final BACnetEID eid,
+                    final URI remoteUri) {
+                DirectoryService.getInstance().register(eid, remoteUri, false,
+                        true);
             }
 
             @Override
@@ -152,952 +370,152 @@ final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
             }
 
         };
-channelConfiguration1.setEntityListener(bacNetEntityHandler);
-```
 
-Start the channel passing the connection factory instance containing the transport bindings
+        channelConfiguration1.setEntityListener(bacNetEntityHandler1);
 
-```java
-channelConfiguration1.initializeAndStart(connectionFactory1);
-```
+        // Configure the transport binding
+        final ConnectionFactory connectionFactory1 = new ConnectionFactory();
+        connectionFactory1.addConnectionClient("ws",
+                new WSConnectionClientFactory());
+        int wsServerPort1 = 8080;
+        connectionFactory1.addConnectionServer("ws",
+                new WSConnectionServerFactory(wsServerPort1));
+        channelConfiguration1.initializeAndStart(connectionFactory1);
 
+        /*
+         *********************** SETUP STACK 2 ***********************
+         */
+        final Channel channel2 = ChannelFactory.getInstance();
+        final ChannelConfiguration channelConfiguration2 = channel2;
 
-#### Setup stack 2 on localhost at port 9090
+        // Configure BACnetEntity Listener to handle Control Messages
+        final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
 
-Create an instance of the ConnectionFactory class
+            @Override
+            public void onRemoteAdded(final BACnetEID eid,
+                    final URI remoteUri) {
+                DirectoryService.getInstance().register(eid, remoteUri, false,
+                        true);
+            }
 
-```java
-ConnectionFactory connectionFactory2 = new ConnectionFactory();
-```  
-Add a Transport Binding for outgoing and incoming communincation  
+            @Override
+            public void onRemoteRemove(final BACnetEID eid) {
+                // TODO Auto-generated method stub
+            }
 
-```java
-int port2 = 9090;
-connectionFactory2.addConnectionClient("ws", new WSConnectionClientFactory());
-connectionFactory2.addConnectionServer("ws", new WSConnectionServerFactory(port2));
-```
-Create an instance of the Channel class. Segregate the functionality by casting channel1 to the interfaces ChannelConfiguration and ApplicationService.
+            @Override
+            public void onLocalRequested(final BACnetEID eid) {
+                // TODO Auto-generated method stub
+            }
 
-```java
-final Channel channel2 = new Channel();
-final ChannelConfiguration channelConfiguration2 = (ChannelConfiguration)channel2;
-// final ApplicationService applicationService2 = (ApplicationService)channel2;
-```
-Implement the ChannelListener interface for each simulated BACnet device and the stacks network port object. Passing a keystore configuration to the network port object to identify the stack.
+        };
 
-```java
-final BACnetEID device1inStack2 = new BACnetEID(2001);
-final BACnetEID device2inStack2 = new BACnetEID(2002);
-final KeystoreConfig keystoreConfig2 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
+        channelConfiguration2.setEntityListener(bacNetEntityHandler2);
 
-final NetworkPortObj npo2 = new NetworkPortObj("ws", 9090, keystoreConfig2);
+        // Configure the transport binding
+        final ConnectionFactory connectionFactory2 = new ConnectionFactory();
+        connectionFactory2.addConnectionClient("ws",
+                new WSConnectionClientFactory());
+        int wsServerPort2 = 9090;
+        connectionFactory2.addConnectionServer("ws",
+                new WSConnectionServerFactory(wsServerPort2));
+        channelConfiguration2.initializeAndStart(connectionFactory2);
 
-channelConfiguration2.registerChannelListener(new ChannelListener(device1inStack2) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
+        /*
+         *********************** Register Application 1 in Stack 1 ***********************
+         */
+        Application1 application1 = new Application1(channel1);
+        for (ChannelListener device : application1.devices) {
+            channelConfiguration1.registerChannelListener(device);
+        }
+
+        /*
+         *********************** Register Application 2 in Stack 2 ***********************
+         */
+        Application2 application2 = new Application2(channel2);
+        for (ChannelListener device : application2.devices) {
+            channelConfiguration2.registerChannelListener(device);
+        }
+
+        /*
+         *********************** Initialize the Directory Service (not used in this example)
+         */
+        final DiscoveryConfig ds = new DiscoveryConfig("DNSSD", "1.1.1.1",
+                "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
+                "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
+
+        try {
+            DirectoryService.init();
+            DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
+
+        } catch (final Exception e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+
+        /*
+         *********************** Enforce Application1 to send a ReadPropertyRequest to Application2.
+         * Application2 answers with its "value". To represent the ReadPropertyRequest and the ReadPropertyAck
+         * BACnet4J is used.***********************
+         */
+        try {
+            application1.sendReadPropertyRequestUsingBACnet4j();
+        } catch (Exception e) {
+            System.err.print(e);
+        }
+        
+        /*
+         *********************** Enforce Application2 to send a WhoIs Request to Application1.
+         * Application1 answers with a IAMRequest. To represent the both bacnet services a byte stream is provided.
+         *
+         */
+
     }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }  
-});
-
-channelConfiguration2.registerChannelListener(new ChannelListener(device2inStack2) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }   
-});
-```
-
-Implement the BACnetEntityListener interface to handle Control Messages on application level
-
-```java
-final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
-
-    @Override
-    public void onRemoteAdded(final BACnetEID eid, final URI remoteUri) {
-        DirectoryService.getInstance().register(eid, remoteUri, false, true);
-    }
-
-    @Override
-    public void onRemoteRemove(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onLocalRequested(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-};
-channelConfiguration2.setEntityListener(bacNetEntityHandler2);
-```
-
-Start the channel passing the connection factory instance containing transport bindings
-
-```java
-channelConfiguration2.initializeAndStart(connectionFactory2);
-```
-
-#### Start the directory service
-The directory service isn't used in this example. Note that we pass the DNSSD Directory Binding.  
-
-```java
- final DiscoveryConfig ds = new DiscoveryConfig(
-		"DNSSD", "86.119.39.127",
-		"itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
-		"dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
-
-try {
-	DirectoryService.init();
-	DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
-
-} catch (final Exception e1) {
-	e1.printStackTrace();
 }
 ```
 
+## Logical View
+<img src="images/LogicalView.png" width="40%">
 
-#### Send a ReadPropertyRequest from device1inStack1 to device2inStack2
-
-Create an instance of ReadProperty class
-
-```java
-ReadPropertyRequest readRequest = new ReadPropertyRequest(
-            new BACnetObjectIdentifier(BACnetObjectType.analogValue, 1),
-            BACnetPropertyIdentifier.presentValue
-);
-```
-Got the byte sequence from the confirmed BACnet Service (readRequest)
-
-```java
-ByteQueue byteQueue = new ByteQueue();
-readRequest.write(byteQueue);
-```
-Create an instance of TPDU class
-
-```java
-TPDU tpdu = new TPDU(device1inStack1, device2inStack2, byteQueue.popAll());
-```
-
-Create an instance of T_UnitDataRequest class and pass the tpdu
-
-```java
-T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(new URI("ws://localhost:9090"), tpdu, 1, true, null);
-```
-
-Pass the unitDataRequest down to the channel
-
-```Java
-applicationService1.doRequest(unitDataRequest);
-```
-
-device2inStack2 should get an indication from device1inStack1.
-
-
-#### Complete code example
-
-```java
-final ConnectionFactory connectionFactory1 = new ConnectionFactory();
-
-final int port1 = 8080;
-connectionFactory1.addConnectionClient("ws",
-        new WSConnectionClientFactory());
-connectionFactory1.addConnectionServer("ws",
-        new WSConnectionServerFactory(port1));
-    
-final Channel channel1 = new Channel();
-final ChannelConfiguration channelConfiguration1 = (ChannelConfiguration)channel1;
-final ApplicationService applicationService1 = (ApplicationService)channel1;
-    
-
-final BACnetEID device1inStack1 = new BACnetEID(1001);
-final BACnetEID device2inStack1 = new BACnetEID(1002);
-final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
-
-final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
-
-channelConfiguration1.registerChannelListener(new ChannelListener(device1inStack1) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-    
-});
-
-channelConfiguration1.registerChannelListener(new ChannelListener(device2inStack1) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-   
-});
-
-final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
-
-    @Override
-    public void onRemoteAdded(final BACnetEID eid,
-            final URI remoteUri) {
-        DirectoryService.getInstance().register(eid, remoteUri, false,
-                true);
-    }
-
-    @Override
-    public void onRemoteRemove(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onLocalRequested(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-};
-channelConfiguration1.setEntityListener(bacNetEntityHandler);
-
-channelConfiguration1.initializeAndStart(connectionFactory1);
-
-final ConnectionFactory connectionFactory2 = new ConnectionFactory();
-
-final int port2 = 9090;
-connectionFactory2.addConnectionClient("ws",
-        new WSConnectionClientFactory());
-connectionFactory2.addConnectionServer("ws",
-        new WSConnectionServerFactory(port2));
-
-final Channel channel2 = new Channel();
-final ChannelConfiguration channelConfiguration2 = (ChannelConfiguration)channel2;
-// final ApplicationService applicationService2 = (ApplicationService)channel2;
-    
-
-final BACnetEID device1inStack2 = new BACnetEID(2001);
-final BACnetEID device2inStack2 = new BACnetEID(2002);
-final KeystoreConfig keystoreConfig2 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
-
-final NetworkPortObj npo2 = new NetworkPortObj("ws", 9090, keystoreConfig2);
-
-channelConfiguration2.registerChannelListener(new ChannelListener(device1inStack2) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-    
-});
-
-channelConfiguration2.registerChannelListener(new ChannelListener(device2inStack2) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-   
-});
-
-final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
-
-    @Override
-    public void onRemoteAdded(final BACnetEID eid,
-            final URI remoteUri) {
-        DirectoryService.getInstance().register(eid, remoteUri, false,
-                true);
-    }
-
-    @Override
-    public void onRemoteRemove(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onLocalRequested(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-};
-channelConfiguration2.setEntityListener(bacNetEntityHandler2);
-
-channelConfiguration2.initializeAndStart(connectionFactory2);
-
-final DiscoveryConfig ds = new DiscoveryConfig(
-        "DNSSD", "[DNS IP]",
-        "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
-        "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
-
-try {
-    DirectoryService.init();
-    DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
-
-} catch (final Exception e1) {
-    // TODO Auto-generated catch block
-    e1.printStackTrace();
-}
-
-final ReadPropertyRequest readRequest = new ReadPropertyRequest(
-        new BACnetObjectIdentifier(BACnetObjectType.analogValue, 1),
-        BACnetPropertyIdentifier.presentValue);
-    
-
-ByteQueue byteQueue = new ByteQueue();
-readRequest.write(byteQueue);
-TPDU tpdu = new TPDU(device1inStack1, device1inStack2,
-        byteQueue.popAll());
-
-T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
-        new URI("ws://localhost:9090"), tpdu, 1, true, null);
-
-applicationService1.doRequest(unitDataRequest);
-```
-
-
-# Hands on 2
-
-## Purpose
-Hands on 2 demonstrates how to setup one BACnet/IT ASE on localhost with two BACnet devices (Application). One device sends a WhoIsRequest to the other device. The WhoIsRequest is provided as a byte array, therefore no dependencies to other projects like BACnet4J are needed. The destinations URI is already resolved (ws://localhost:8080), nevertheless the usage of a directory binding is shown.
-
+## Developer View
+<img src="images/DeveloperView.png" width="40%">
 
 
 ## Download
-1. Create a new empty directory __BACnetIT__ and make it the current directory
-2. Download the source code of projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__.  
+soon..
+
+# Build from source
+## Get the source
+
+1. Create a new empty directory __BACnetIT__ and make it the current directory.
+2. Clone the following GitHub projects:  
 __ase__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/ase.git```  
+```https://github.com/fhnw-BACnet-IT/ase.git```  
 __transport-binding-ws__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
+```https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
 __directory-binding-dnssd__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
+```https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
+__samples-and-tests__ project:  
+```https://github.com/fhnw-BACnet-IT/samples-and-tests.git```
 
 Alternatively use the following commands to checkout all the projects.  
 __MAC OSX:__
 
 ```java
-mkdir ~/Desktop/BACnetIT/; cd ~/Desktop/BACnetIT/; git clone https://github.com/fhnw-BACnet-IT/ase.git; git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git; git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git;
+mkdir ~/Desktop/BACnetIT/; cd ~/Desktop/BACnetIT/; git clone https://github.com/fhnw-BACnet-IT/ase.git; git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git; git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git; git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git;
 ```
 __LINUX:__
 
 __WINDOWS:__
 
+## Build the source using Gralde Wrapper
 
-## Build
-1. Make __BACnetIT/transport-binding-ws__ the current directory.
-2. Note that project __transport-binding-ws__ has a dependency to project __ase__, so ensure that both projects are stored at the same level in the __BACnetIT__ folder.
-3. Build __transport-binding-ws__ using Gradle Wrapper:  
-```
-  ./gradlew clean build -x test
-```  
-
-4. Note that project __directory-binding-dnssd__ has a dependency to project __ase__ as well, so ensure that both projects are stored at the same level in the __BACnetIT__ folder.
-5. Build __directory-binding-dnssd__ accordingly  
-```
-cd ../directory-binding-dnssd; ./gradlew build -x test;
-```
-6. Find all needed dependencies as jar files under __directory-binding-dnssd/build/distributions__ and
-__transport-binding-ws/build/distributions__
-
-
-## Setup
-
-### Preparation
-Ensure the builded jars are in java class path.
-
-#### Setup stack on localhost at port 8080
-Consider [Hands On 1](#hands-on-1) to get more detailed information about the code below.
-
-```java
-final ConnectionFactory connectionFactory = new ConnectionFactory();
-
-final int port = 8080;
-connectionFactory.addConnectionClient("ws", new WSConnectionClientFactory());
-connectionFactory.addConnectionServer("ws", new WSConnectionServerFactory(port));
-    
-final Channel channel1 = new Channel();
-final ChannelConfiguration channelConfiguration1 = (ChannelConfiguration)channel1;
-final ApplicationService applicationService1 = (ApplicationService)channel1;
-
-final BACnetEID device1inStack1 = new BACnetEID(1001);
-final BACnetEID device2inStack1 = new BACnetEID(1002);
-final KeystoreConfig keystoreConfig1 = new KeystoreConfig("dummyKeystores/keyStoreDev1.jks","123456", "operationaldevcert");
-final NetworkPortObj npo1 = new NetworkPortObj("ws", 8080, keystoreConfig1);
-
-channelConfiguration1.registerChannelListener(new ChannelListener(device1inStack1) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-   
-});
-
-channelConfiguration1.registerChannelListener(new ChannelListener(device2inStack1) {
-    @Override
-    public void onIndication(
-            final T_UnitDataIndication tUnitDataIndication,
-            final ChannelHandlerContext ctx) {
-        System.out.println(this.eid.getIdentifierAsString()
-                + " got an indication" + tUnitDataIndication.getData());
-    }
-
-    @Override
-    public void onError(final String cause) {
-        System.err.println(cause);
-    }
-
-   
-});
-
-final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
-
-    @Override
-    public void onRemoteAdded(final BACnetEID eid,
-            final URI remoteUri) {
-        DirectoryService.getInstance().register(eid, remoteUri, false,
-                true);
-    }
-
-    @Override
-    public void onRemoteRemove(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onLocalRequested(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-};
-channelConfiguration1.setEntityListener(bacNetEntityHandler);
-
-channelConfiguration1.initializeAndStart(connectionFactory);
-
-  
-
-final DiscoveryConfig ds = new DiscoveryConfig(
-        "DNSSD", "86.119.39.127",
-        "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
-        "dev._sub._bacnet._tcp.", "obj._sub._bacnet._tcp.", false);
-
-try {
-    DirectoryService.init();
-    DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
-
-} catch (final Exception e1) {
-    // TODO Auto-generated catch block
-    e1.printStackTrace();
-}
-    
-   
-    
-// Get the byte stream of an WhoIsRequest()
-byte[] whoIsRequest = new byte[]{(byte)0x1e,(byte)0x8e,(byte)0x8f,(byte)0x1f};
-    
-final TPDU tpdu = new TPDU(device1inStack1, device2inStack1, whoIsRequest);
-
-final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
-        new URI("ws://localhost:8080"), tpdu, 1, true, null);
-
-applicationService1.doRequest(unitDataRequest);
-```
-
-
-# Hands on 3
-### Description / Story: 
-Add two transport bindings; websocket and websocket secure.
-
-```java
-// Define key- and truststore
-KeystoreConfig keystoreConfig = new KeystoreConfig([PATH-TO-KEYSTORE],
-        [PWD], "operationaldevcert");
-TruststoreConfig truststoreConfig = new TruststoreConfig([PATH-TO-TRUSTSTORE],
-        [PWD], [TRUSTLIST]...);
-
-// Build the connection factory
-ConnectionFactory connectionFactory = new ConnectionFactory();
-
-// Outgoing websocket secure transport binding (wss://)
-connectionFactory.addConnectionClient("wss",
-        new WSSConnectionClientFactory(keystoreConfig, truststoreConfig));
-// Incoming websocket secure transport binding (wss://)
-connectionFactory.addConnectionServer("wss",
-        new WSSConnectionServerFactory([PORT], keystoreConfig, truststoreConfig));
-
-// Outgoing websocket transport binding (ws://)    
-connectionFactory.addConnectionClient("ws", new WSConnectionClientFactory());
-// Incoming websocket transport binding (ws://)
-connectionFactory.addConnectionServer("ws", new WSConnectionServerFactory([PORT]));
-```
-
-# Hands on 4
-## Purpose
-Send a message between two simulated BACnet/IT devices using prior BACnet/IT EID resolution.
-In [Hands On 1](#hands-on-1) and [Hands On 2](#hands-on-2) the Directory Service not initialized but not really used.
-Note that we passed the destination URI directly to the T_UnitDataRequest constructor.
-
-```java
-final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(new URI("ws://localhost:9090"), tpdu, 1, true, null);
-```
-In a normal case the destination URI is not known. Therefore a BACnetEID resolution has to happen before.
-
-## Download (same steps like [Hands On 1](#hands-on-1))
-1. Create a new empty directory __BACnetIT__ and make it the current directory
-2. Download the source code of projects __ase__, __transport-binding-ws__, __directory-binding-dnssd__ and __samples-and-tests__  
-__ase__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/ase.git```  
-__transport-binding-ws__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git```  
-__directory-binding-dnssd__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git```  
-__samples-and-tests__ project:  
-```git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git```  
-
-
-
-## Build (same steps like [Hands On 1](#hands-on-1))
 1. Make __BACnetIT/samples-and-tests__ the current directory.
-2. Note that project __samples-and-tests__ has dependencies to projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__ so ensure that all projects are stored at the same level in the __BACnetIT__ folder.
+2. Note that project __samples-and-tests__ has dependencies to projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__, thus ensure that all projects are stored at the same level in the __BACnetIT__ folder.
 3. Build __samples-and-tests__ using Gradle Wrapper:  
 ```
   ./gradlew clean build -x test
 ```  
 4. Find all needed dependencies as jar files under __samples-and-tests/build/distributions__
 
-## Setup
-
-
-### Preparation
-Ensure the builded jars are in java class path.
-
-
-#### Setup application 1 and 2 on localhost at port 8080 and 9090. Implement a Dummy-DirectoryBinding to resolve a BACnetEID's URI before sending a request.
-
-Define variables for the Directory Service instance, the Directory Service is singleton in the context of a Channel object.
-
-```java
-DirectoryService ds = null;
-```
-
-We inititalie two applications with each one device on localhost. On application on port 8080 and one application on port 9090.  
-
-```java
-final BACnetEID device1inStack1 = new BACnetEID(1001);
-final URI device1inStack1Uri = new URI("wss://localhost:8080");
-final BACnetEID device1inStack2 = new BACnetEID(2001);
-final URI device1inStack2Uri = new URI("wss://localhost:9090");
-```
-
-Note that in this example Websocket Secure is used,  so ensure a proper configuration of the key- and truststore.
-
-```java
-final KeystoreConfig keystoreConfig = new KeystoreConfig(
-        "dummyKeystores/keyStoreDev1.jks", "123456",
-        "operationaldevcert");
-final TruststoreConfig truststoreConfig = new TruststoreConfig(
-        "dummyKeystores/trustStore.jks", "123456", "installer.ch",
-        "installer.net");
-```
-
-Get an instance of ConnectionFactory and add a Transport Binding for outgoing and incoming communication. Analogous to
-[Hands On 1](#hands-on-1) and [Hands On 2](#hands-on-2)
-
-```java
-
-final ConnectionFactory connectionFactory1 = new ConnectionFactory();
-
-connectionFactory1.addConnectionClient("wss",
-            new WSSConnectionClientFactory(keystoreConfig,
-                    truststoreConfig));
-connectionFactory1.addConnectionServer("wss",
-        new WSSConnectionServerFactory(device1inStack1Uri.getPort(), keystoreConfig,
-                truststoreConfig));
-```
-
-Create an instance of the Channel class. Segregate the functionality by casting channel1 to the interfaces ChannelConfiguration and ApplicationService.
-
-```java
-final Channel channel1 = new Channel();
-final ChannelConfiguration channelConfiguration1 = channel1;
-final ApplicationService applicationService1 = channel1;
-```
-Implement the ChannelListener interface for each simulated BACnet device and the stacks network port object.  
-Just the BDS device is permitted to register itself and other BACnet devices into a Name System. Thus, the BDS has to handle incoming Register-Requests. (AddListElementRequest).
-##### BDS must handle AddListElementRequests
-
-```java
-final NetworkPortObj npo1 = new NetworkPortObj("wss", device1inStack1Uri.getPort(), keystoreConfig);
-
-channelConfiguration1
-        .registerChannelListener(new ChannelListener(device1inStack1) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication"
-                        + tUnitDataIndication.getData());
-
-                // device1inStack1 is BDS, so it must handle DNS
-                // Registration requests
-                final ServicesSupported servicesSupported = new ServicesSupported();
-                servicesSupported.setAll(true);
-                try {
-                    final ASDU msg = new IncomingRequestParser(
-                            servicesSupported,
-                            new ByteQueue(tUnitDataIndication.getData()
-                                    .getBody())).parse();
-                    if (msg instanceof ConfirmedRequest
-                            && ((ConfirmedRequest) msg)
-                                    .getServiceRequest() instanceof AddListElementRequest) {
-                        System.out.println(
-                                "BDS got a AddListElementRequest");
-                        final AddListElementRequest aler = new AddListElementRequest(
-                                ((ConfirmedRequest) msg)
-                                        .getServiceData());
-
-                        if (aler.getListOfElements().getCount() == 1) {
-
-                            DirectoryService.getInstance().register(
-                                    tUnitDataIndication.getData()
-                                            .getSourceEID(),
-                                    new URI(((CharacterString) aler
-                                            .getListOfElements().get(1))
-                                                    .toString()),
-                                    false, false);
-
-                        }
-                        final int serviceAckChoice = ((ConfirmedRequest) msg)
-                                .getServiceRequest().getChoiceId();
-                        final SimpleACK simpleack = new SimpleACK(
-                                serviceAckChoice);
-                        final ByteQueue bq = new ByteQueue();
-                        simpleack.write(bq);
-                        final TPDU simpleAckTpdu = new TPDU(
-                                device1inStack1, device1inStack2,
-                                bq.popAll());
-                        final T_UnitDataRequest simpleAckRequest = new T_UnitDataRequest(
-                                device1inStack2Uri, simpleAckTpdu, 0,
-                                false, null);
-                        applicationService1.doRequest(simpleAckRequest);
-
-                    }
-
-                } catch (final Exception e) {
-
-                }
-
-            }
-
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
-
-        });
-```
-
-Implement the BACnetEntityListener interface to handle Control Messages on application level
-
-```java
-final BACnetEntityListener bacNetEntityHandler = new BACnetEntityListener() {
-
-    @Override
-    public void onRemoteAdded(final BACnetEID eid,
-            final URI remoteUri) {
-        DirectoryService.getInstance().register(eid, remoteUri, false,
-                true);
-    }
-
-    @Override
-    public void onRemoteRemove(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onLocalRequested(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-};
-channelConfiguration1.setEntityListener(bacNetEntityHandler);
-```
-
-Start the channel passing the connection factory instance containing transport bindings
-
-```java
-
-channelConfiguration1.initializeAndStart(connectionFactory1);
-```
-
-Same setup for application 2. Note that device device1inStack2 is not BDS. Thus, it doesn't need to handle Register-Requests.
-
-```java
-final ConnectionFactory connectionFactory2 = new ConnectionFactory();
-
-final int port2 = 9090;
-
-connectionFactory2.addConnectionClient("wss",
-        new WSSConnectionClientFactory(keystoreConfig,
-                truststoreConfig));
-connectionFactory2.addConnectionServer("wss",
-        new WSSConnectionServerFactory(port2, keystoreConfig,
-                truststoreConfig));
-
-final Channel channel2 = new Channel();
-final ChannelConfiguration channelConfiguration2 = channel2;
-final ApplicationService applicationService2 = channel2;
-
-final NetworkPortObj npo2 = new NetworkPortObj("wss", 9090,
-        keystoreConfig);
-
-channelConfiguration2
-        .registerChannelListener(new ChannelListener(device1inStack2) {
-            @Override
-            public void onIndication(
-                    final T_UnitDataIndication tUnitDataIndication,
-                    final ChannelHandlerContext ctx) {
-                System.out.println(this.eid.getIdentifierAsString()
-                        + " got an indication"
-                        + tUnitDataIndication.getData());
-                final ServicesSupported servicesSupported = new ServicesSupported();
-                servicesSupported.setAll(true);
-                try {
-                    final ASDU msg = new IncomingRequestParser(
-                            servicesSupported,
-                            new ByteQueue(tUnitDataIndication.getData()
-                                    .getBody())).parse();
-                    System.out.println(msg.getClass());
-                } catch (final Exception e) {
-                }
-            }
-
-            @Override
-            public void onError(final String cause) {
-                System.err.println(cause);
-            }
-
-        });
-
-final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
-
-    @Override
-    public void onRemoteAdded(final BACnetEID eid,
-            final URI remoteUri) {
-        DirectoryService.getInstance().register(eid, remoteUri, false,
-                true);
-    }
-
-    @Override
-    public void onRemoteRemove(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onLocalRequested(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-    }
-
-};
-channelConfiguration2.setEntityListener(bacNetEntityHandler2);
-channelConfiguration2.initializeAndStart(connectionFactory2);
-```
-
-Analogous to Transport Bindings a Directory Binding is needed. The __directory-bindings-ws__ project provides a DNSSD Binding.
-In this example we simplify the setup using a DummyDirectoryBinding. Note that all DirectoryBindings have to implement the __DirectoryBinding__ interface.
-
-
-```java
-// Implement a Dummy Directory Binding using the DirectoryBinding interface
-final DirectoryBinding dummyDirectoryBinding = new DirectoryBinding() {
-    BACnetEID bdsEid = null;
-    Map<BACnetEID, URI> records = new HashMap<BACnetEID, URI>();
-
-    @Override
-    public List<BACnetEID> findBDS() {
-        if (bdsEid == null) {
-            return null;
-        }
-        final List<BACnetEID> bdsList = new LinkedList<BACnetEID>();
-        bdsList.add(bdsEid);
-        return bdsList;
-
-    }
-
-    @Override
-    public URI resolve(final BACnetEID eid) {
-        return records.get(eid);
-    }
-
-    @Override
-    public void delete(final BACnetEID eid) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void register(final BACnetEID eid, final URI url,
-            final boolean isBDS) {
-        records.put(eid, url);
-        if (isBDS) {
-            bdsEid = eid;
-        }
-    }
-
-    @Override
-    public void registerObject(final String instance,
-            final boolean isInstanceObjectName, final String txtvers,
-            final BACnetEID bacnetEid, final String oid_oname,
-            final int ttl, final int quality) {
-        // TODO Auto-generated method stub
-
-    }
-};
-```
-Get the singleton instance of Directory Service and add the implemented Dummy-DirectoryBinding.
-
-```java
-try {
-    DirectoryService.init();
-    ds = DirectoryService.getInstance();
-    ds.setDNSBinding(dummyDirectoryBinding);
-```
-
-Note that only the BDS device is allowed to register itself using the Directory Service.
-
-```java
-
-    // Register the device from application 1 as BDS.
-    // BDS registers itself directly using Directory Service.
-    ds.register(
-            channelConfiguration1.getChannelListeners().get(0).getEID(),
-            device1inStack1Uri, true, false);
-```
-Other non-BDS devices have to register themselves by sending a AddListElementRequest to the BDS. An AddListElementRequest is a confirmed BACnet service, therefore is takes the usual Transport Binding way.
-
-```java
-
-    final BACnetEID bdsEID = ds.getBds();
-    final URI bdsURI = ds.resolve(bdsEID);
-    final SequenceOf<CharacterString> uriChars = new SequenceOf<CharacterString>();
-    uriChars.add(new CharacterString(device1inStack2Uri.toString()));
-    final AddListElementRequest request = new AddListElementRequest(
-            new BACnetObjectIdentifier(BACnetObjectType.multiStateInput,
-                    1),
-            BACnetPropertyIdentifier.stateText, null, uriChars);
-
-    final ByteQueue byteQueue = new ByteQueue();
-    request.write(byteQueue);
-    final TPDU remoteRegistrationTPDU = new TPDU(device1inStack2,
-            device1inStack1, byteQueue.popAll());
-    final T_UnitDataRequest remoteRegistrationRequest = new T_UnitDataRequest(
-            bdsURI, remoteRegistrationTPDU, 0, true, null);
-    applicationService2.doRequest(remoteRegistrationRequest);
-
-} catch (final Exception e1) {
-    // TODO Auto-generated catch block
-    e1.printStackTrace();
-}
-
-```
-__device1inStack1 is BDS__, therefore its __onIndication__ method has to handle the __AddListElementRequest from device1inStack2__. (The onIndication method of device1inStack1 has to register __device1inStack2__ into the Name System).
-Note the implementation [above](#####BDS-must-handle-AddListElementRequests).
-
-A short break to ensure __device1inStack1(BDS)__ had enough time to register __device1inStack2__ into the Name System
-
-```java
-
-try {
-    Thread.sleep(2000);
-} catch (final Exception e) {
-}
-```
-
-Send a __ReadPropertyRequest__ from __device1inStack1__ to __device1inStack2__. Let's pretend __device1inStack1__ doesn't know the destinations URI. Therefore __device1inStack1__ has to resolve the BACnetEID using the DirectoryService to get the URI of __device1inStack2__.
-
-```java
-
-final ReadPropertyRequest readRequest = new ReadPropertyRequest(
-        new BACnetObjectIdentifier(BACnetObjectType.analogValue, 1),
-        BACnetPropertyIdentifier.presentValue);
-
-final ByteQueue byteQueue = new ByteQueue();
-readRequest.write(byteQueue);
-final TPDU tpdu = new TPDU(device1inStack1, device1inStack2,
-        byteQueue.popAll());
-
-// Device1inStack1 (BDS) resolves BACnetEID from Device1inStack2 using
-// the DirectoryService
-URI dev1stack2UriResolved = null;
-try {
-    dev1stack2UriResolved = ds.resolve(device1inStack2);
-   } catch (final Exception e) {
-    System.err.println("No URI found for dev1Stack2");
-    System.err.println(e);
-
-}
-
-final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(
-        dev1stack2UriResolved, tpdu, 1, false, null);
-
-applicationService1.doRequest(unitDataRequest);
-```
-
-
-
-
-
-
-
-        
 
