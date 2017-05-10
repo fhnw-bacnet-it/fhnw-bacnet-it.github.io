@@ -84,7 +84,7 @@ For a working setup we create four java classes in the __BACnetITApplication__ j
 - __Application2.java__  
 - __Configurator.java__  
 
-__Go to [Complete Code](##CompleteCode) to skip the implementation details.__  
+__Go to [Complete Code](##Complete-Code) to skip the implementation details.__  
 The next section describes the structure of the 4 classes in detail.
 
 ### __Implement AbstractApplication.java__ 
