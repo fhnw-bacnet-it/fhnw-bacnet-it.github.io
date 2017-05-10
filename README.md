@@ -34,7 +34,7 @@ __With this few information in mind, lets start and build your first BACnet/IT a
 
 ## Download
 Download the binary files from [here](https://www.dropbox.com/s/ekkq8r3ow91b51v/bacnet_it_opensrc_lib.zip?dl=0) (temporary link)  
-Alternatively, [build the jars from source](#Buildfromsource).
+Alternatively, [build the jars from source](#build-from-source).
 
 
 ## Prerequisites
