@@ -66,7 +66,7 @@ Alternatively, [build the jars from source](#build-from-source).
 
 <img src="images/addJars.png" width=600px>
 
-+ Add all the jar files (from [## Download](##download)) by selecting them.
++ Add all the jar files (from [## Download](##download) ) by selecting them.
 
 <img src="images/selectJars.png" width=400px>
 
