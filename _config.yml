@@ -2,4 +2,4 @@ theme: jekyll-theme-slate
 site.title: BACnet/IT
 site.description: An open source BACnet stack
 site.github.repository_name: BACnet/IT
-site.github.repository_url: https://github.com/fhnw-bacnet-it
+site.github.repository_url: https://github.com/fhnw-bacnet-it/
