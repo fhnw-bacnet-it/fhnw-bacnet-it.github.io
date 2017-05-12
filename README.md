@@ -35,7 +35,7 @@ __With this information in mind, let us start and build our first BACnet/IT appl
 
 
 ## Download
-Download the binary distribution from [here](https://www.dropbox.com/s/ekkq8r3ow91b51v/bacnet_it_opensrc_lib.zip?dl=0) (temporary link)  
+Download the binary distribution from [here](https://www.cs.technik.fhnw.ch/bacnet-it/).  
 As an alternative, [build the JARs from source](#build-from-source).
 
 
