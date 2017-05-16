@@ -1,23 +1,22 @@
 # BACnet/IT Tutorial
 
+__In this tutorial you will learn how to develop applications using our new BACnet/IT stack.__
 
 ## What we do
-
-__In this tutorial you will learn how to develop applications using our new BACnet/IT stack.__
 
 Consider the following figure:
 <img src="images/overview.png" width="80%">. 
 
-We will create two applications with each two simulated bacnet devices (yellow and green). Both applications will extend the abstract class AbstractApplication, which is not shown in the figure, AbstractApplication provides base functionality to the applications. Each application uses an ASE to communicate with other applications. The ASE component is given but has to be configured. Therefore, we will create a __Configurator__ (blue).  
+We will create two applications with each two simulated bacnet devices (yellow and green). Both applications will extend the abstract class __AbstractApplication__, which is not shown in the figure, __AbstractApplication__ provides base functionality to the applications. Each application uses an ASE to communicate with other applications. The ASE component is given but has to be configured. Therefore, we will create the class __Configurator__ (blue).  
 
 The __configurator__ has four fundamental tasks:  
 
-1. Initialize the necessary BACnet/IT components.  
-2. Link the Applications with the corresponding communication stacks. (in figure: ASE, white).  
-3. Link the available Transport Bindings (gray) to the ASE.
-4. Enfore communication between devices.
+1. Initialize the necessary BACnet/IT ASE components.  
+2. Link the two applications with the corresponding communication stacks. (in figure: ASEs, white).  
+3. Link the available Transport Bindings (gray) to the ASEs.
+4. Enforce communication between devices.
 
-As mentioned in point 4, after the setup, we let communicate device 1001 (yellow) with device 2001 (green) and vice versa.
+As mentioned in point 4, after the setup of the classes, we let communicate device 1001 (yellow) with device 2001 (green) and vice versa.
 
 Note further, the two interfaces __ApplicationService__ and __ChannelConfiguration__ and remember the two commandments:  
 1. The Applications's view of ASE is ApplicationService.  
@@ -62,11 +61,11 @@ Alternatively, [build the jars from source](#build-from-source).
 
 <img src="images/properties.png" width=400px>
 
-+ Click on __Add JARs...__ in the menu __Java Build Path/Libraries__
++ Click on __Add JARs...__ in the menu __Java Build Path / Libraries__
 
 <img src="images/addJars.png" width=600px>
 
-+ Add all the jar files (from [## Download](##download) ) by selecting them.
++ Add all the jar files (from [Download](##download) ) by selecting them.
 
 <img src="images/selectJars.png" width=400px>
 
@@ -88,8 +87,10 @@ __Go to [Complete Code](##complete-code) to skip the implementation details.__
 The next section describes the structure of the 4 classes in detail.
 
 ### __Implement AbstractApplication.java__ 
-AbstractApplication is an abstract class that provides base functionality for applications.
-Our two applications will extend AbstractApplication.
+__AbstractApplication__ is an abstract class that provides base functionality for applications.
+Our two applications will extend __AbstractApplication__.
+
+So, the first step is to create an abstract Java class __AbstractApplication__.
 
 Ensure to import the following classes.  
  __Note that by convention just classes within an api package should be used!__
@@ -113,9 +114,10 @@ import ch.fhnw.bacnetit.samplesandtests.api.encoding.type.constructed.ServicesSu
 import ch.fhnw.bacnetit.samplesandtests.api.encoding.util.ByteQueue;
 import ch.fhnw.bacnetit.samplesandtests.api.service.confirmed.ReadPropertyRequest;
 ```
-Create the constructor for the abstract class.  
+
+The code shows the class structure, the essential instance variables and the constructor of class __AbstractApplication__.  
 Note the following:  
-- ApplicationService is the application's view to the ASE and will be passed from the Configurator class.  
+- __ApplicationService__ is the application's view to the ASE and will be passed from the __Configurator__ class.  
 - Each application maintains a list with simulated bacnet devices.
 
 ```java
@@ -134,9 +136,12 @@ public abstract class AbstractApplication {
     public AbstractApplication(ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
+	//...
+}
 ```
-Lets provide a method to easy send ReadPropertyRequests to other devices.
-BACnet4J is used to build BACnet services (e.g. ReadPropertyRequest).
+Lets implement a method to easy send ReadPropertyRequests to other devices.
+BACnet4J is used to build BACnet services (e.g. ReadPropertyRequest).  
+Add the following method to class __AbstractApplication__.
 
 ```java    
     /**
@@ -165,13 +170,12 @@ BACnet4J is used to build BACnet services (e.g. ReadPropertyRequest).
     }
 ```
 
-There is no need to use BACnet4J to build BACnet services.  Feel free to provide any bacnet services as a byte arrays.  
-In the example we send WhoIs- and IAmRequests services between devices, both services are given as a valid byte array.
+There is no need to use BACnet4J to build BACnet services.  Feel free to provide any bacnet services as byte arrays.  
+Later, in the example we'll send WhoIs- and IAmRequests services between devices, both services are given as valid byte arrays. Add the following method to class __AbstractApplication__.
 
 
 ```java
-    
-    
+
     /**
      * sendBACnetMessage() sends a bacnet message represented as byte array to the given destination.
      * Ensure the byte array represents a valid bacnet message.
@@ -180,8 +184,7 @@ In the example we send WhoIs- and IAmRequests services between devices, both ser
      */
     public void sendBACnetMessage(URI destination, BACnetEID from, BACnetEID to, byte[] confirmedBacnetMessage) throws URISyntaxException {
       
-        final TPDU tpdu = new TPDU(from, to,
-                confirmedBacnetMessage);
+        final TPDU tpdu = new TPDU(from, to, confirmedBacnetMessage);
 
         final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, true, null);
 
@@ -190,7 +193,7 @@ In the example we send WhoIs- and IAmRequests services between devices, both ser
 
 ```
 
-To parse and interpret incoming bacnet messages the following helper method is used.
+To parse and interpret incoming bacnet messages the following helper method is used. Add the following method to class __AbstractApplication__.
 
 
 ```java    
@@ -217,13 +220,13 @@ To parse and interpret incoming bacnet messages the following helper method is u
         }
         return request;
     }
-
-}
-
+    
 ```
+Great, you are done with the implementation of class __AbstractApplication__.
+
 
 ### __Implement Application1.java__ 
-Application1 extends AbstractApplication. Application1 simulates and maintains two bacnet devices. Each device has to handle incoming bacnet messages.
+Application1 simulates and maintains two bacnet devices. Each device has to handle incoming bacnet messages. Application1 extends AbstractApplication. 
 
 Ensure to import the following classes.  
  __Note that by convention just classes within an api package should be used!__
@@ -249,6 +252,7 @@ import ch.fhnw.bacnetit.samplesandtests.api.service.unconfirmed.WhoIsRequest;
 Let Application1 extend AbstractApplication to inherit base functionality.
 ApplicationService will be passed from the Configurator. Ensure to invoke AbstractApplication's constructor
 and pass the ApplicationService instance to it.
+The following code shows the main class structure with the constructor.
 
 ```java
 /**
@@ -268,12 +272,17 @@ public class Application1 extends AbstractApplication {
      */
     public Application1(ApplicationService applicationService) {
         super(applicationService);
+        // ...
+    }
+  	// ...
+}
 ``` 
 
-A bacnet device gets simulated by __ChannelListener__.
+A bacnet device gets simulated by using __ChannelListener__.
 The following listing shows how Application1 implements two bacnet devices (BACnetEID 1001 and 1002).
-A bacnet device must handle incoming bacnet messages, you can define the behaviour by adjusting the 
+A bacnet device (an implementation of __ChannelListener__) must handle incoming bacnet messages, you can define the behaviour by adjusting the 
 __public void onIndication(T_UnitDataIndication arg0, Object context)__ method.
+Add the following code into the constructor of Application1, right below of __super(applicationService);__
 
 ```java
 // To simulate a device within the application, a ChannelListener needs
@@ -365,13 +374,12 @@ Don't forget to add the two bacnet devices to the application's device list.
 		 // Add the two bacnetDevices to the device list of application1.
         devices.add(bacnetDevice1001);
         devices.add(bacnetDevice1002);
-    }
-
-}
 ```
 
+Great, you are done with the implementation of class __Application1__.
+
 ### __Implement Application2.java__ 
-Application2 extends AbstractApplication as well. Application2 simulates and maintains two bacnet devices. Each device has to handle incoming bacnet messages.
+Application2 simulates and maintains two bacnet devices. Each device has to handle incoming bacnet messages. Application2 extends AbstractApplication as well. 
 
 Ensure to import the following classes.  
  __Note that by convention just classes within an api package should be used!__
@@ -406,6 +414,7 @@ Let Application2 extend AbstractApplication to inherit base functionality.
 ApplicationService will be passed from the Configurator. Ensure to invoke AbstractApplication's constructor
 and pass the ApplicationService instance to it.  
 Further we define a arbitrary value, this value will get requests from Application1 later in this tutorial.
+The following code show the main structure and a part of the constructor.
 
 ```java
 **
@@ -429,13 +438,19 @@ public class Application2 extends AbstractApplication {
      */
     public Application2(ApplicationService applicationService) {
         super(applicationService);
+        // ...
+    
+    }
+    // ...
 ```
 
 A bacnet device gets simulated by __ChannelListener__.
-The following listing shows how Application1 implements two bacnet devices (BACnetEID 2001 and 2002).
+The following listing shows how Application2 implements two bacnet devices (BACnetEID 2001 and 2002).
 A bacnet device must handle incoming bacnet messages, you can define the behaviour by adjusting the 
 __public void onIndication(T_UnitDataIndication arg0, Object context)__ method.  
-__Note that in this tutorial Application1 and Application2 handle incoming messages differently.__
+__Note that in this tutorial Application1 and Application2 handle incoming messages differently.__  
+Add the following code into the constructor of Application 2 right below of __super(applicationService);__
+
 
 ```java
 // To simulate a device within the application, a ChannelListener needs
@@ -529,20 +544,17 @@ Don't forget to add the two bacnet devices to the application's device list.
 ```java
  		 // Add the two bacnetDevices to the device list of application2.
         devices.add(bacnetDevice2001);
-        devices.add(bacnetDevice2002);
-    }
-
-}
 ```
+Great, you are done with the implementation of class __Application2__.
 
 #### __Implement Configurator.java__ 
 
 The Configurator has the following tasks:  
-- Java entry point of the demo setup.  
-- Initialization of essential BACnet/IT components (e.g. DirectoryService).  
+- Java entry point of the example demo.  
+- Initialization of essential BACnet/IT components (e.g. Directory Service).  
 - Definition of the available Transport Bindings.  
 - Linking between Application1 and ASE1, as well as between Application2 and ASE2.  
-- Linking between Transport Binding and the ASE.  
+- Linking between Transport Bindings and the ASEs.  
 - Triggers some communication between simulated bacnet devices.  
 
 
@@ -565,19 +577,29 @@ import ch.fhnw.bacnetit.transportbinding.ws.incoming.api.*;
 import ch.fhnw.bacnetit.transportbinding.ws.outgoing.api.*;
 ```
 
-The Configurator class contains a the Main method only.  
+The Configurator class contains the Main() method only.  
 Lets go trough the steps one by one.
 
 In this tutorial two ASEs get simulated, both running on localhost (port 8080 and 9090).  
-Both ASE have simulate each two bacnet devices.  
+Both ASE simulate each two bacnet devices.  
 An ASE needs one or several Transport Bindings to communicate (e.g. http or websocket).  
 
+
+The following code shows the main class structure.
 
 ```java
 public class Configurator {
 
     public static void main(String[] args) {
+    	// ...
+    }
+    //...
+}
 ```
+
+Add the following code parts right into the __main()__ method of class Configurator.
+
+
 Use the ChannelFactory to get access to ASE in a proper way.  
 Cast the ChannelInterface to ChannelConfiguration, in this way you ensure a proper and limited view to ASE functionality
 
@@ -775,17 +797,17 @@ In the second communication attempts renounce the usage of BACnet4J. We let devi
         try{
             System.in.read();
         }catch(Exception e){}
-        
 
-       
-    }
-}
 ```
 
-__Congratulation, your first two BACnet/IT application are communicating!__ 
- 
+__Congratulations, your first two BACnet/IT applications are communicating!__ 
+
+
 
 ## Complete Code
+
+The following section provides the four classes ready to use.  
+
 ### __AbstractApplication.java__
 
 ```java
@@ -1356,6 +1378,13 @@ public class Configurator {
 
 
 # Build from source
+
+Instead of downloading the binaries you can build the jar files from source.  
+We are working with [Gradle Build Tool](https://gradle.org).  
+For simplicity we provide Gradle Wrappers, therefore you don't have to install Gradle Build Tool.  
+Ensure your JDK is set and follow the steps to build the projects.
+
+
 ## Get the source
 
 1. Create a new empty directory __BACnetIT__ and make it the current directory.
@@ -1369,15 +1398,14 @@ __directory-binding-dnssd__ project:
 __samples-and-tests__ project:  
 ```https://github.com/fhnw-BACnet-IT/samples-and-tests.git```
 
-Alternatively use the following commands to checkout all the projects.  
-__MAC OSX:__
+Alternatively use the following commands to clone all the projects using GIT in terminal. 
+
+__MAC OSX and LINUX:__
 
 ```java
 mkdir ~/Desktop/BACnetIT/; cd ~/Desktop/BACnetIT/; git clone https://github.com/fhnw-BACnet-IT/ase.git; git clone https://github.com/fhnw-BACnet-IT/transport-binding-ws.git; git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git; git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git;
 ```
-__LINUX:__
 
-__WINDOWS:__
 
 ## Build the source using Gralde Wrapper
 
@@ -1387,6 +1415,6 @@ __WINDOWS:__
 ```
   ./gradlew clean build -x test
 ```  
-4. Find all needed dependencies as jar files under __samples-and-tests/build/distributions__
+4. Find all needed dependencies as .jar files in a .tar and .zip file under __samples-and-tests/build/distributions__
 
 
