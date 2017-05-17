@@ -131,7 +131,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -280,7 +280,7 @@ Make sure to import the following classes.
 import java.net.URI;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -436,7 +436,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -623,7 +623,7 @@ Make sure to import the following classes.
 import java.net.URI;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
 import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
 import ch.fhnw.bacnetit.ase.application.transaction.api.*;
@@ -897,7 +897,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -1010,7 +1010,7 @@ public abstract class AbstractApplication {
 import java.net.URI;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -1139,7 +1139,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -1275,7 +1275,7 @@ public class Application2 extends AbstractApplication {
 import java.net.URI;
 
 // Import packages from the BACnet/IT opensource projects
-// By convention just classes within a api package should be used
+// By convention just classes within an api package should be used
 import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
 import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
 import ch.fhnw.bacnetit.ase.application.transaction.api.*;
