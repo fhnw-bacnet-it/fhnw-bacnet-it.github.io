@@ -50,32 +50,32 @@ As an alternative, [build the JARs from source](#build-from-source).
 ### Eclipse Configuration
 + Create a new __Java Project__ in Eclipse.
 
-<img src="images/JavaProject.png" height=300px>
+<img src="images/JavaProject.png" height="300px">
 
 + Name the new project __BACnetITApplication__ and ensure Java 8 is selected as execution JRE.
 
-<img src="images/projectname.png" width=400px>
+<img src="images/projectname.png" width="400px">
 
 + Create a folder __libs__ within the project __BACnetITApplication__
 
-<img src="images/addfolder.png" width=400px>
+<img src="images/addfolder.png" width="400px">
 
-<img src="images/nameitlibs.png" width=400px>
+<img src="images/nameitlibs.png" width="400px">
 
 + Open the project properties
 
-<img src="images/properties.png" width=400px>
+<img src="images/properties.png" width="400px">
 
 + Copy all 14 JAR files into the the created __libs__ folder.
 
 + Click on __Add JARs...__ in the menu __Java Build Path / Libraries__
 
-<img src="images/addJars.png" width=600px>
+<img src="images/addJars.png" width="600px">
 
 
 + Add all the JAR files (from [Download](##download) ) by selecting them.
 
-<img src="images/selectJars.png" width=400px>
+<img src="images/selectJars.png" width="400px">
 
 
 ## Create a Demo Applicaton
@@ -1470,6 +1470,58 @@ git clone https://github.com/fhnw-bacnet-it/transport-binding-ws.git
 git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git
 git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git
 ```
+
+## Required changes for a distributed Setup
+To run this example in a distributed setup. (E.g. if you are using two computers and want them to communicate) note the following:
+
+- __Changes in Configurator__:  
+Adjust the destination ip address and port. Replace __localhost__ and __wsServerPort2__ with the corresponding information.  
+Further check, that your device has EID 2001 and your communication partners device has EID 1001, otherwise adjust the EID in the code.
+
+
+```java
+// Represent a WhoIsRequest as byte array
+byte[] whoIsRequest = new byte[]{(byte)0x1e,(byte)0x8e,(byte)0x8f,(byte)0x1f};
+try{
+    System.out.println("Applicatio2 sends a WhoIsRequest to Application1");
+    application2.sendBACnetMessage(new URI("ws://[localhost]:"+[wsServerPort1]),
+	     new BACnetEID([2001]), 
+	     new BACnetEID([1001]),
+	     whoIsRequest);
+}catch(Exception e){
+    System.out.println(e);
+}
+```
+
+- __Changes in Application__:  
+An application handles and answers to incoming messages. Therefore, change the URI to which the response shoud go.  
+Replace __localhost__ and __port__ as well. Further check, that your device has EID 1001 and your communication partners device has EID 2001, otherwise adjust the EID in the code.
+
+```java
+// Dummy Handling of a WhoIsRequest
+else if (incoming instanceof UnconfirmedRequest 
+	&& ((UnconfirmedRequest) incoming).getService() instanceof WhoIsRequest) {
+    System.out.println("Application1 got an indication - WhoIsRequest");
+
+    // Represent an IAmRequest as byte array
+    byte[] iAmRequest = new byte[] { (byte) 0x1E, (byte) 0x0E,
+            (byte) 0xC4, (byte) 0x02, (byte) 0x00, (byte) 0x00,
+            (byte) 0x00, (byte) 0x21, (byte) 0x01, (byte) 0x91,
+            (byte) 0x00, (byte) 0x21, (byte) 0x01, (byte) 0x0F,
+            (byte) 0x1F };
+
+    try {
+        System.out.println("Application1 sends an IAmRequest to Application2");
+        sendBACnetMessage(new URI("ws://[localhost]:[9090]"),
+                new BACnetEID([1001]), new BACnetEID([2001]),iAmRequest);
+    } catch (Exception e) {
+    }
+
+}
+```
+
+
+
 
 ## Build the Source using Gradle Wrapper
 
