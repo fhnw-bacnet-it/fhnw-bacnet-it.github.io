@@ -3,7 +3,7 @@
 __In this tutorial you will learn how to develop applications using our new BACnet/IT stack.__
 
 ## Content
-[What we do](#what-wed-do)  
+[What we do](#what-we-do)  
 [- Download Binaries](#download)  
 [- Prerequisites](#prerequisites)  
 [Create a Demo Applicaton](#create-a-demo-applicaton)  
