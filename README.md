@@ -2,6 +2,24 @@
 
 __In this tutorial you will learn how to develop applications using our new BACnet/IT stack.__
 
+## Content
+[What we do](#what-wed-do)  
+[- Download Binaries](#download)  
+[- Prerequisites](#Prerequisites)  
+[Create a Demo Applicaton](#create-a-demo-applicaton)  
+[- Implement AbstractApplication.java](#implement-abstractapplicationjava)  
+[- Implement Application1.java](#implement-application1java)  
+[- Implement Application2.java](#implement-application2java)  
+[- Implement Configurator.java](#implement-configuratorjava)  
+[Complete Code](#complete-code)  
+[Build from source](#build-from-source)  
+[Required changes for a distributed setup](#required-changes-for-a-distributed-setup)
+
+
+Create a Demo Applicaton
+
+
+
 ## What we do
 
 Consider the following figure:  
@@ -575,7 +593,7 @@ Don't forget to add the two BACnet devices to the application's device list.
 ```
 Great, you are done with the implementation of class __Application2__.
 
-#### __Implement Configurator.java__ 
+### __Implement Configurator.java__ 
 
 The Configurator has the following tasks:  
 - Java entry point of the example demo.  
@@ -855,13 +873,14 @@ Application2 got an indication - IAmRequest
 
 __Congratulations, your first two BACnet/IT applications are communicating!__ 
 
-
+<hr>
+<hr>
 
 ## Complete Code
 
 The following section provides the four classes ready to use.  
 
-### __AbstractApplication.java__
+### __Complete Code of AbstractApplication.java__
 
 ```java
 // Make sure to import the following classes
@@ -977,7 +996,7 @@ public abstract class AbstractApplication {
 
 ```
 
-### __Application1.java__
+### __Complete Code of Application1.java__
 
 ```java
 // Make sure to import the following classes
@@ -1106,7 +1125,7 @@ public class Application1 extends AbstractApplication {
 
 ```
 
-### __Application2.java__
+### __Complete Code of Application2.java__
 
 ```java
 // Make sure to import the following classes
@@ -1243,7 +1262,7 @@ public class Application2 extends AbstractApplication {
 
 ```
 
-### __Configurator.java__
+### __Complete Code of Configurator.java__
 
 ```java
 // Make sure to import the following classes
@@ -1429,7 +1448,8 @@ public class Configurator {
 
 ```
 
-
+<hr>
+<hr>
 
 # Build from source
 
@@ -1475,7 +1495,34 @@ git clone https://github.com/fhnw-BACnet-IT/directory-binding-dnssd.git
 git clone https://github.com/fhnw-BACnet-IT/samples-and-tests.git
 ```
 
-## Required changes for a distributed Setup
+
+## Build the Source using Gradle Wrapper
+
+1. Make __BACnetIT/samples-and-tests__ the current directory.
+2. Note that project __samples-and-tests__ depends on the projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__, thus ensure that all projects are stored at the same level in the __BACnetIT__ folder.
+3. Build __samples-and-tests__ using Gradle Wrapper:  
+
+__MAC OSX or LINUX:__
+
+```shell
+  cd samples-and-tests
+  ./gradlew clean build -x test
+```
+
+__WINDOWS:__
+
+
+```shell
+  cd samples-and-tests
+  gradlew.bat clean build -x test
+```
+
+4. Find all needed dependencies as JAR files in a ZIP archive under __samples-and-tests/build/distributions__.
+
+<hr>
+<hr>
+
+# Required changes for a distributed Setup
 To run this example in a distributed setup. (E.g. if you are using two computers and want them to communicate) note the following:
 
 - __Changes in Configurator__:  
@@ -1523,29 +1570,3 @@ else if (incoming instanceof UnconfirmedRequest
 
 }
 ```
-
-
-
-
-## Build the Source using Gradle Wrapper
-
-1. Make __BACnetIT/samples-and-tests__ the current directory.
-2. Note that project __samples-and-tests__ depends on the projects __ase__, __transport-binding-ws__ and __directory-binding-dnssd__, thus ensure that all projects are stored at the same level in the __BACnetIT__ folder.
-3. Build __samples-and-tests__ using Gradle Wrapper:  
-
-__MAC OSX or LINUX:__
-
-```shell
-  cd samples-and-tests
-  ./gradlew clean build -x test
-```
-
-__WINDOWS:__
-
-
-```shell
-  cd samples-and-tests
-  gradlew.bat clean build -x test
-```
-
-4. Find all needed dependencies as JAR files in a ZIP archive under __samples-and-tests/build/distributions__.
