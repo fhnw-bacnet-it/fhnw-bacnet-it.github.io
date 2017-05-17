@@ -73,7 +73,7 @@ As an alternative, [build the JARs from source](#build-from-source).
 <img src="images/addJars.png" width="600px">
 
 
-+ Add all the JAR files (from [Download](##download) ) by selecting them.
++ Add all the JAR files (from [Download](#download) ) by selecting them.
 
 <img src="images/selectJars.png" width="400px">
 
@@ -91,7 +91,7 @@ For a working setup we create four Java classes in the __BACnetITApplication__ J
 - __Application2.java__  
 - __Configurator.java__  
 
-__Go to [Complete Code](##complete-code) to skip the implementation details.__  
+__Go to [Complete Code](#complete-code) to skip the implementation details.__  
   
 The next section describes the structure of the four classes in detail.
 
