@@ -123,10 +123,15 @@ Make sure to import the following classes.
  __Note that by convention just classes within an api package should be used!__
 
 ```java
+// Make sure to import the following classes
+// Import Java components
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
+
+// Import packages from the BACnet/IT opensource projects
+// By convention just classes within a api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
@@ -273,7 +278,6 @@ Make sure to import the following classes.
 // Make sure to import the following classes
 // Import Java components
 import java.net.URI;
-
 
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within a api package should be used
@@ -618,6 +622,8 @@ Make sure to import the following classes.
 // Import Java components
 import java.net.URI;
 
+// Import packages from the BACnet/IT opensource projects
+// By convention just classes within a api package should be used
 import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
 import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
 import ch.fhnw.bacnetit.ase.application.transaction.api.*;
@@ -1003,7 +1009,6 @@ public abstract class AbstractApplication {
 // Import Java components
 import java.net.URI;
 
-
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within a api package should be used
 import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
@@ -1269,6 +1274,8 @@ public class Application2 extends AbstractApplication {
 // Import Java components
 import java.net.URI;
 
+// Import packages from the BACnet/IT opensource projects
+// By convention just classes within a api package should be used
 import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
 import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
 import ch.fhnw.bacnetit.ase.application.transaction.api.*;
