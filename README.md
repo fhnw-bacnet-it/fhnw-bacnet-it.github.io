@@ -585,6 +585,10 @@ The Configurator has the following tasks:
 - Linking between Transport Bindings and the ASEs.  
 - Triggers some communication between simulated BACnet devices.  
 
+Note the following sequence diagram to understand better about the __Configurator__ tasks.  
+
+<img src="images/configuratorTasks.png" width="1000px">
+
 
 Create a new JAVA class and name it __Configurator__.
 
