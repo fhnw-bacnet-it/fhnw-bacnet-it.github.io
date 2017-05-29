@@ -16,7 +16,7 @@ __In this tutorial you will learn how to develop applications using our new BACn
 [- Implement Application2.java](#implement-application2java)  
 [- Implement Configurator.java](#implement-configuratorjava)  
 [Complete Code](#complete-code)  
-[Create a Demo Application using the Directory Service](#create-a-demo-application-using-the-directory Service)  
+[Create a Demo Application using the Directory Service](#create-a-demo-application-using-the-directory-service)  
 [Build from source](#build-from-source)  
 [Required changes for a distributed setup](#required-changes-for-a-distributed-setup)
 
