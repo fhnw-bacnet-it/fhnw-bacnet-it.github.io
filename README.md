@@ -882,63 +882,6 @@ __Congratulations, your first two BACnet/IT applications are communicating!__
 
 <hr>
 <hr>
-## Implement a Dummy Directory Binding
-Project [directory-binding-dnssd](https://github.com/fhnw-bacnet-it/directory-binding-dnssd) provides a ready-to-use implementation of DNSSD Binding.  
-In this section a further Dummy Directory Binding gets implemented. Thus, you see the main workflow of using the Directory Service.
-
-### Implement a Dummy Directory
-
-- Create a new JAVA class DummyDirectoryBinding.java which implements the __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding__ interface.
-
-The class structure should looks like the following code:
-
-```java
-import java.net.URI;
-import java.util.List;
-
-import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
-import ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding;
-
-public class DummyDirectoryBinding implements DirectoryBinding {
-
-    @Override
-    public void delete(BACnetEID arg0) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public List<BACnetEID> findBDS() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void register(BACnetEID arg0, URI arg1, boolean arg2) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public void registerObject(String arg0, boolean arg1, String arg2,
-            BACnetEID arg3, String arg4, int arg5, int arg6) {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public URI resolve(BACnetEID arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-}
-```
-
-
-
-<hr>
-<hr>
 
 ## Complete Code
 
@@ -1515,7 +1458,9 @@ public class Configurator {
 
 <hr>
 <hr>
+
 ## Create a Demo Application using the Directory Service
+
 The project __directory-binding-dnssd__ provides a DNSSD directory binding implementation.  
 Instead of using the DNSSD binding, we will implement a __DummyDirectoryBinding__ in this example.  
 The __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService__ class is the directory information access used by bacnet devices.  
