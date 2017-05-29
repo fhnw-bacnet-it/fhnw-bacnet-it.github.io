@@ -1,3 +1,7 @@
+# About BACnet/IT
+
+BACnet/IT has been developed at the [Institute of Mobile and Distributed Systems of the University of Applied Sciences Northwestern Switzerland](http://www.fhnw.ch/engineering/imvs).
+
 # BACnet/IT Tutorial
 
 __In this tutorial you will learn how to develop applications using our new BACnet/IT stack.__
