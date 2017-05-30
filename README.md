@@ -1464,7 +1464,7 @@ public class Configurator {
 The project __directory-binding-dnssd__ provides a DNSSD directory binding implementation.  
 Instead of using the DNSSD binding, we will implement a __DummyDirectoryBinding__ in this example.  
 The __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService__ class is the directory information access used by bacnet devices.  
-Every directory binding has to implement the __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding__ interface.
+All directory bindings have to implement the __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding__ interface.
 
 
 - Create java class DummyDirectoryBinding.java
@@ -1479,7 +1479,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding;
 
-// Dummy directory binding has to implement DirectoryBinding
+// All directory bindings have to implement the DirectoryBinding interface
 public class DummyDirectoryBinding implements DirectoryBinding {
     
     // BACnetEID of bds
@@ -1554,8 +1554,8 @@ public class DummyDirectoryBinding implements DirectoryBinding {
     }
 }
 ```
-- Extend the method __onIndication(T_UnitDataIndication tUnitDataIndication, Object context)__ of bacnetDevice1001 in class __Application1.java__ with a further __else if__ case.  
-This case will handle incoming AddListElementRequests. (Contains information about the bacnet device which should be registered)
+- Extend the method __onIndication(T_UnitDataIndication tUnitDataIndication, Object context)__ of bacnet device 1001 in class __Application1.java__ with a further __else if__ case.  
+This case will handle incoming AddListElementRequests. (Contain information about the bacnet device that should be registered)
 
 ```java
 // Device 1001 of application 1 is BDS. Therefore it has to handle remote directory register requests
@@ -1585,7 +1585,7 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
    		application1.devices.get(0).getEID(),
 		new URI("ws://localhost:8080"), true, false);
 	``` 
-	- Let devices 1002, 2001 and 2002 register themselves using BDS.
+	- Let devices 1002, 2001 and 2002 register themselves by sending AddListElementRequests to the BDS.
 	
 	```java
 	 		// Register 1002 using BDS
@@ -1595,7 +1595,7 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
                      	new URI("ws://localhost:8080"),
                       	application1.devices.get(0).getEID()));
 
-            application2.sendBACnetMessage(
+            application1.sendBACnetMessage(
                     DirectoryService.getInstance()
                             .resolve(DirectoryService.getInstance().getBds()),
                     application1.devices.get(1).getEID(),
@@ -1625,7 +1625,7 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
                     application2.devices.get(1).getEID(),
                     application1.devices.get(0).getEID(), bq.popAll());
    
-   // Additional method
+   // Additional method to build a AddListElementRequest. Consider the BACnet/IT spec for the detailed and correct structure.
    public static byte[] performRegisterOverBds(BACnetEID who, URI location,BACnetEID bds) {
         final SequenceOf<CharacterString> uriChars = new SequenceOf<CharacterString>();
         uriChars.add(new CharacterString(location.toString()));
@@ -1775,3 +1775,4 @@ else if (incoming instanceof UnconfirmedRequest
 
 }
 ```
+[Download Section](download/README.md)
