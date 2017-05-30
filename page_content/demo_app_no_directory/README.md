@@ -1,5 +1,5 @@
 ## Create a Demo Applicaton
-[Go to start page](../../README.md)
+[Go back to start page](../../README.md)
 
 [- Implement AbstractApplication.java](#implement-abstractapplicationjava)  
 [- Implement Application1.java](#implement-application1java)  
@@ -518,7 +518,7 @@ The Configurator has the following tasks:
 
 Note the following sequence diagram to understand better about the __Configurator__ tasks.  
 
-<img src="images/configuratorTasks.png" width="1000px">
+<img src="../images/configuratorTasks.png" width="1000px">
 
 
 Create a new JAVA class and name it __Configurator__.

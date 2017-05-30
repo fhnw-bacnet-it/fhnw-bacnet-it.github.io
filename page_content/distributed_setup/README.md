@@ -1,5 +1,5 @@
 # Required changes for a distributed Setup
-[Go to start page](../../README.md)
+[Go back to start page](../../README.md)
 
 To run this example in a distributed setup. (E.g. if you are using two computers and want them to communicate) note the following:
 

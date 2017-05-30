@@ -1,5 +1,5 @@
 # Build from source
-[Go to start page](../../README.md)
+[Go back to start page](../../README.md)
 
 Instead of downloading the binaries you can build the JAR files from source.  
 We are working with [Gradle Build Tool](https://gradle.org).  

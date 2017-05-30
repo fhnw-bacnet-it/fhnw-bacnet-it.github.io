@@ -1,5 +1,5 @@
 ## Create a Demo Application using the Directory Service.
-[Go to start page](../../README.md)
+[Go back to start page](../../README.md)
 
 The project __directory-binding-dnssd__ provides a DNSSD directory binding implementation.  
 Instead of using the DNSSD binding, we will implement a __DummyDirectoryBinding__ in this example.  
@@ -192,4 +192,8 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
 	        new BACnetEID(2001), new BACnetEID(1001), whoIsRequest);
 	          
 	```
+	
+	Note the more detailed sequence diagram about the tasks of the __Configurator__:
+	<img src="../images/configuratorTasksDetail.png" width="1000px">
+	
 [Go to Build from source](../build/README.md)  

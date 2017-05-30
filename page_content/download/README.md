@@ -1,5 +1,5 @@
 ## Download
-[Go to start page](../../README.md)
+[Go back to start page](../../README.md)
 
 Download the binary distribution from [here](https://www.cs.technik.fhnw.ch/bacnet-it/releases).  
 As an alternative, [build the JARs from source](../build/README.md) .
