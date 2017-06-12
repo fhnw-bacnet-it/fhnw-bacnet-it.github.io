@@ -7,12 +7,12 @@
 [- Implement Configurator.java](#implement-configuratorjava)  
 [Complete Code](#complete-code)  
 
-To demonstrate a working setup we create two applications each ontop of their own ASE (communication stack). 
+To demonstrate a working setup we create two applications each on top of their own ASE (communication stack). 
 Therefore a __Configurator__ is needed which links the applications to their ASE and initializes some essential parameters.
 
 
 ### Required Classes
-For a working setup we create four Java classes in the __BACnetITApplication__ Java project.  
+For a working setup we create four java classes in the __BACnetITApplication__ project.  
 - __AbstractApplication.java__  
 - __Application1.java__  
 - __Application2.java__  
@@ -26,7 +26,7 @@ The next section describes the structure of the four classes in detail.
 __AbstractApplication__ is an abstract class that provides base functionality for applications.
 Our two applications will extend __AbstractApplication__.
 
-So, the first step is to create an abstract Java class __AbstractApplication__.
+So, the first step is to create an abstract java class __AbstractApplication__.
 
 Make sure to import the following classes.  
  __Note that by convention just classes within an api package should be used!__
@@ -57,6 +57,7 @@ import ch.fhnw.bacnetit.samplesandtests.api.service.confirmed.ReadPropertyReques
 ```
 
 The following code shows the class structure, the essential instance variables and the constructor of class __AbstractApplication__.  
+
 Note the following:  
 - __ApplicationService__ is the application's view to the __ASE__ and will be passed from the __Configurator__ class.  
 - Each application maintains a list with simulated BACnet devices.
@@ -116,7 +117,7 @@ Add the following method to class __AbstractApplication__.
 
 
 There is no need to use BACnet4J to build BACnet services.  Feel free to provide any BACnet services as byte arrays.  
-Later in the example we'll send WhoIs- and IAmRequest services between devices, both services are given as valid byte arrays. Add the following method to class __AbstractApplication__.
+Later in this example we'll send WhoIs- and IAmRequest services between devices, both services are given as valid byte arrays. Add the following method to class __AbstractApplication__.
 
 
 
