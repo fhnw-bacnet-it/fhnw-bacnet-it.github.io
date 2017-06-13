@@ -3,11 +3,11 @@
 
 The project __directory-binding-dnssd__ provides a DNSSD directory binding implementation.  
 Instead of using the DNSSD binding, we will implement a __DummyDirectoryBinding__ in this example.  
-The __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService__ class is the directory information access used by bacnet devices.  
+The __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService__ class is the directory access used by application and bacnet devices.  
 All directory bindings have to implement the __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding__ interface.
 
 
-- Create java class DummyDirectoryBinding.java
+- Create a java class called __DummyDirectoryBinding.java__ that implements DirectoryBinding.
 
 ```java
 import java.net.URI;
@@ -95,7 +95,7 @@ public class DummyDirectoryBinding implements DirectoryBinding {
 }
 ```
 - Extend the method __onIndication(T_UnitDataIndication tUnitDataIndication, Object context)__ of bacnet device 1001 in class __Application1.java__ with a further __else if__ case.  
-This case will handle incoming AddListElementRequests. (Contain information about the bacnet device that should be registered)
+That case will handle incoming AddListElementRequests. (Contains information about the bacnet device that should be registered)
 
 ```java
 // Device 1001 of application 1 is BDS. Therefore it has to handle remote directory register requests
@@ -114,7 +114,7 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
 ```
 
 - Adjust class __Configurator__
-	- Let device 1001 be the BDS. The BDS registers itself directly using __DirectoryService__.
+	- Let device 1001 be the BDS. The BDS registers itself directly using __DirectoryService__. All other devices send AddListElementRequest towards the BDS to register themselves. 
 	
 	```java
 	DirectoryService.init();
@@ -193,7 +193,8 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
 	          
 	```
 	
-	Note the more detailed sequence diagram about the tasks of the __Configurator__:
+	Note the detailed sequence diagram about the tasks of the __Configurator__ in a setup with Directory Service: [Picture](../images/configuratorTasksDetail.png)
 	<img src="../images/configuratorTasksDetail.png" width="1000px">
+	
 	
 [Go to Build from source](../build/README.md)  
