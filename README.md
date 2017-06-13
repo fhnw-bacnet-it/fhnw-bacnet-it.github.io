@@ -8,11 +8,11 @@ __In this tutorial you will learn how to develop applications using our new BACn
 
 ## Content
 [What we do](#what-we-do)  
-[Download Binaries and Prerequisites](page_content/download/README.md)  
-[Create a Demo Applicaton without Directory Service](page_content/demo_app_no_directory/README.md)  
-[Create a Demo Application using the Directory Service](page_content/demo_app_directory/README.md)  
-[Build from source](page_content/build/README.md)  
-[Required changes for a distributed setup](page_content/distributed_setup/README.md)
+[Download Binaries and Prerequisites](page_content/2_download/README.md)  
+[Create a Demo Applicaton without Directory Service](page_content/3_demo_app_no_directory/README.md)  
+[Create a Demo Application using the Directory Service](page_content/4_demo_app_directory/README.md)  
+[Build from source](page_content/5_build/README.md)  
+[Required changes for a distributed setup](page_content/6_distributed_setup/README.md)
 
 
 ## What we do
@@ -48,4 +48,4 @@ Thus, ensure that all your imported classes that consider components of the BACn
 
 __With this information in mind, let us start and build our first BACnet/IT application!__
 
-[Go to Download Binaries and Prerequisites](page_content/download/README.md)  
+[Go to Download Binaries and Prerequisites](page_content/2_download/README.md)  

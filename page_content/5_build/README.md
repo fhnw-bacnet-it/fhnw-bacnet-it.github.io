@@ -67,4 +67,4 @@ __WINDOWS:__
 
 4. Find all needed dependencies as JAR files in a ZIP archive under __samples-and-tests/build/distributions__.
 
-[Go to Required changes for a distributed setup](../distributed_setup/README.md)
+[Go to Required changes for a distributed setup](../6_distributed_setup/README.md)

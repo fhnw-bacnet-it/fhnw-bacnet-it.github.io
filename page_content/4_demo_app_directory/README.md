@@ -194,7 +194,7 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
 	```
 	
 	Note the detailed sequence diagram about the tasks of the __Configurator__ in a setup with Directory Service: [Picture](../images/configuratorTasksDetail.png)
-	<img src="../images/configuratorTasksDetail.png" width="1000px">
+	[<img src="../images/configuratorTasksDetail.png" width="1000px">](../images/configuratorTasksDetail.png)
 	
 	
-[Go to Build from source](../build/README.md)  
+[Go to Build from source](../5_build/README.md)  

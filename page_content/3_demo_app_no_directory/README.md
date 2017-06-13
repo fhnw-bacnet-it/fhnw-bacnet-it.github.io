@@ -1364,4 +1364,4 @@ public class Configurator {
 }
 ```
 
-[Go to Create a Demo Application using the Directory Service](../demo_app_directory/README.md)
+[Go to Create a Demo Application using the Directory Service](../4_demo_app_directory/README.md)
