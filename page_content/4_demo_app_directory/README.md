@@ -3,8 +3,8 @@
 
 The project __directory-binding-dnssd__ provides a DNSSD directory binding implementation.  
 Instead of using the DNSSD binding, we will implement a __DummyDirectoryBinding__ in this example.  
-The __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService__ class is the directory access used by application and bacnet devices.  
-All directory bindings have to implement the __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding__ interface.
+The __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService__ class is the directory interface used by applications and bacnet devices.  
+All directory bindings implement the __ch.fhnw.bacnetit.ase.network.directory.api.DirectoryBinding__ interface.
 
 
 - Create a java class called __DummyDirectoryBinding.java__ that implements DirectoryBinding.
@@ -195,6 +195,9 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
 	
 	Note the detailed sequence diagram about the tasks of the __Configurator__ in a setup with Directory Service: [Picture](../images/configuratorTasksDetail.png)
 	[<img src="../images/configuratorTasksDetail.png" width="1000px">](../images/configuratorTasksDetail.png)
+	
+	Note the detailed system overview: [Picture](../images/systemOverview.png)
+	[<img src="../images/systemOverview.png" width="1000px">](../images/systemOverview.png)
 	
 	
 [Go to Build from source](../5_build/README.md)  
