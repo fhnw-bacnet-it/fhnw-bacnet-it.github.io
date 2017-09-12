@@ -98,19 +98,19 @@ public class DummyDirectoryBinding implements DirectoryBinding {
 That case will handle incoming AddListElementRequests. (Contains information about the bacnet device that should be registered)
 
 ```java
-// Device 1001 of application 1 is BDS. Therefore it has to handle remote directory register requests
-else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).getServiceRequest() instanceof AddListElementRequest){
-	SequenceOf<?> charcterStrings = ((AddListElementRequest)((ConfirmedRequest)incoming).getServiceRequest()).getListOfElements();
-	System.out.println("BDS got an AddListElementRequest");
-	for (Encodable cs : charcterStrings ) {
-		try {
-			DirectoryService.getInstance().register(tUnitDataIndication.getData().getSourceEID(), new URI(cs.toString()), false, false);
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-}
+                // Device 1001 of application 1 is BDS. Therefore it has to handle remote directory register requests
+                else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).getServiceRequest() instanceof AddListElementRequest){
+                    SequenceOf<?> charcterStrings = ((AddListElementRequest)((ConfirmedRequest)incoming).getServiceRequest()).getListOfElements();
+                    System.out.println("BDS got an AddListElementRequest");
+                    for (Encodable cs : charcterStrings ) {
+                        try {
+                            DirectoryService.getInstance().register(arg0.getData().getSourceEID(), new URI(cs.toString()), false, false);
+                        } catch (URISyntaxException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                }
 ```
 
 - Adjust class __Configurator__
@@ -175,6 +175,7 @@ else if (incoming instanceof ConfirmedRequest && ((ConfirmedRequest)incoming).ge
         final ByteQueue byteQueue = new ByteQueue();
         request.write(byteQueue);
         return byteQueue.popAll();
+	}
 
    ```
    

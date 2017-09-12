@@ -39,9 +39,9 @@ import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.TPDU;
@@ -108,7 +108,7 @@ Add the following method to class __AbstractApplication__.
         final TPDU tpdu = new TPDU(from, to,
                 byteQueue.popAll());
 
-        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, true, null);
+        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, null);
 
         applicationService.doRequest(unitDataRequest);
 
@@ -131,9 +131,10 @@ Later in this example we'll send WhoIs- and IAmRequest services between devices,
      */
     public void sendBACnetMessage(URI destination, BACnetEID from, BACnetEID to, byte[] confirmedBacnetMessage) throws URISyntaxException {
       
-        final TPDU tpdu = new TPDU(from, to, confirmedBacnetMessage);
+        final TPDU tpdu = new TPDU(from, to,
+                confirmedBacnetMessage);
 
-        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, true, null);
+        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, null);
 
         applicationService.doRequest(unitDataRequest);
     }
@@ -189,9 +190,9 @@ Make sure to import the following classes.
 // Import Java components
 import java.net.URI;
 
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
@@ -238,87 +239,87 @@ __public void onIndication(T_UnitDataIndication arg0, Object context)__ method.
 __Add the following code into the constructor of Application1, right below of super(applicationService);__
 
 ```java
-// To simulate a device within the application, a ChannelListener needs
-// to get implemented.
-ChannelListener bacnetDevice1001 = new ChannelListener(
-        new BACnetEID(1001)) {
+        // To simulate a device within the application, a ChannelListener needs
+        // to get implemented.
+        ChannelListener bacnetDevice1001 = new ChannelListener(
+                new BACnetEID(1001)) {
 
-    /**
-     * Handles incoming message errors from the ASE.
-     */
-    @Override
-    public void onError(String arg0) {
-        // TODO Auto-generated method stub
+            /**
+             * Handles incoming message errors from the ASE.
+             */
+            @Override
+            public void onError(String arg0) {
+                // TODO Auto-generated method stub
 
-    }
-
-    /**
-     * Handles incoming messages from the ASE.
-     */
-    @Override
-    public void onIndication(T_UnitDataIndication arg0,
-            Object context) {
-        System.out.println("Application1 got an indication");
-        // Parse the incoming message
-        ASDU incoming = getServiceFromBody(arg0.getData().getBody());
-
-        // Dummy Handling of a ReadPropertyAck
-        if (incoming instanceof ComplexACK) {
-            System.out.println(
-                    "Application1 got an indication - ReadPropertyAck");
-            System.out.println("************\nReceived Value: "
-                    + ((ComplexACK) incoming).getService().toString()
-                            .split("\\(")[1].split("\\)")[0]
-                    + "\n************");
-        }
-        // Dummy Handling of a WhoIsRequest
-        else if (incoming instanceof UnconfirmedRequest
-                && ((UnconfirmedRequest) incoming)
-                        .getService() instanceof WhoIsRequest) {
-            System.out.println(
-                    "Application1 got an indication - WhoIsRequest");
-
-            // Represent an IAmRequest as byte array
-            byte[] iAmRequest = new byte[] { (byte) 0x1E, (byte) 0x0E,
-                    (byte) 0xC4, (byte) 0x02, (byte) 0x00, (byte) 0x00,
-                    (byte) 0x00, (byte) 0x21, (byte) 0x01, (byte) 0x91,
-                    (byte) 0x00, (byte) 0x21, (byte) 0x01, (byte) 0x0F,
-                    (byte) 0x1F };
-
-            try {
-                System.out.println("Application1 sends an IAmRequest to Application2");
-                sendBACnetMessage(new URI("ws://localhost:9090"),
-                        new BACnetEID(1001), new BACnetEID(2001),iAmRequest);
-            } catch (Exception e) {
             }
 
-        }
+            /**
+             * Handles incoming messages from the ASE.
+             */
+            @Override
+            public void onIndication(T_UnitDataIndication arg0,
+                    Object context) {
+                System.out.println("Application1 got an indication");
+                // Parse the incoming message
+                ASDU incoming = getServiceFromBody(arg0.getData().getBody());
 
-    }
-};
+                // Dummy Handling of a ReadPropertyAck
+                if (incoming instanceof ComplexACK) {
+                    System.out.println(
+                            "Application1 got an indication - ReadPropertyAck");
+                    System.out.println("************\nReceived Value: "
+                            + ((ComplexACK) incoming).getService().toString()
+                                    .split("\\(")[1].split("\\)")[0]
+                            + "\n************");
+                }
+                // Dummy Handling of a WhoIsRequest
+                else if (incoming instanceof UnconfirmedRequest
+                        && ((UnconfirmedRequest) incoming)
+                                .getService() instanceof WhoIsRequest) {
+                    System.out.println(
+                            "Application1 got an indication - WhoIsRequest");
 
-// To simulate a device within the application, a ChannelListener needs
-// to get implemented.
-ChannelListener bacnetDevice1002 = new ChannelListener(
-        new BACnetEID(1002)) {
+                    // Represent an IAmRequest as byte array
+                    byte[] iAmRequest = new byte[] { (byte) 0x1E, (byte) 0x0E,
+                            (byte) 0xC4, (byte) 0x02, (byte) 0x00, (byte) 0x00,
+                            (byte) 0x00, (byte) 0x21, (byte) 0x01, (byte) 0x91,
+                            (byte) 0x00, (byte) 0x21, (byte) 0x01, (byte) 0x0F,
+                            (byte) 0x1F };
 
-    /**
-     * Handles incoming message errors from the ASE.
-     */
-    @Override
-    public void onError(String arg0) {
-        // TODO Auto-generated method stub
-    }
+                    try {
+                        System.out.println("Application1 sends an IAmRequest to Application2");
+                        sendBACnetMessage(new URI("ws://localhost:9090"),
+                                new BACnetEID(1001), new BACnetEID(2001),iAmRequest);
+                    } catch (Exception e) {
+                    }
 
-    /**
-     * Handles incoming messages from the ASE.
-     */
-    @Override
-    public void onIndication(T_UnitDataIndication arg0,
-            Object context) {
-        // TODO Auto-generated method stub
-    }
-};
+                }
+
+            }
+        };
+
+        // To simulate a device within the application, a ChannelListener needs
+        // to get implemented.
+        ChannelListener bacnetDevice1002 = new ChannelListener(
+                new BACnetEID(1002)) {
+
+            /**
+             * Handles incoming message errors from the ASE.
+             */
+            @Override
+            public void onError(String arg0) {
+                // TODO Auto-generated method stub
+            }
+
+            /**
+             * Handles incoming messages from the ASE.
+             */
+            @Override
+            public void onIndication(T_UnitDataIndication arg0,
+                    Object context) {
+                // TODO Auto-generated method stub
+            }
+        };
 ```
 
 Don't forget to add the two BACnet devices to the application's device list.
@@ -345,9 +346,9 @@ Make sure to import the following classes.
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
@@ -412,16 +413,16 @@ Add the following code into the constructor of __Application2__ right below of _
 
 
 ```java
-// To simulate a device within the application, a ChannelListener needs
+        // To simulate a device within the application, a ChannelListener needs
         // to get implemented.
-        ChannelListener bacnetDevice2001 = new ChannelListener(
+        final ChannelListener bacnetDevice2001 = new ChannelListener(
                 new BACnetEID(2001)) {
 
             /**
              * Handles incoming message errors from the ASE.
              */
             @Override
-            public void onError(String arg0) {
+            public void onError(final String arg0) {
                 // TODO Auto-generated method stub
 
             }
@@ -430,12 +431,13 @@ Add the following code into the constructor of __Application2__ right below of _
              * Handles incoming messages from the ASE.
              */
             @Override
-            public void onIndication(T_UnitDataIndication arg0,
-                    Object context) {
+            public void onIndication(final T_UnitDataIndication arg0,
+                    final Object context) {
 
                 System.out.println("Application2 got an indication");
                 // Parse the incoming message
-                ASDU incoming = getServiceFromBody(arg0.getData().getBody());
+                final ASDU incoming = getServiceFromBody(
+                        arg0.getData().getBody());
 
                 if (incoming instanceof ConfirmedRequest
                         && ((ConfirmedRequest) incoming)
@@ -459,7 +461,7 @@ Add the following code into the constructor of __Application2__ right below of _
                         sendBACnetMessage(new URI("ws://localhost:8080"),
                                 new BACnetEID(2001), new BACnetEID(1001),
                                 byteQueue.popAll());
-                    } catch (URISyntaxException e) {
+                    } catch (final URISyntaxException e) {
                         // TODO Auto-generated catch block
                         e.printStackTrace();
                     }
@@ -476,14 +478,14 @@ Add the following code into the constructor of __Application2__ right below of _
 
         // To simulate a device within the application, a ChannelListener needs
         // to get implemented.
-        ChannelListener bacnetDevice2002 = new ChannelListener(
+        final ChannelListener bacnetDevice2002 = new ChannelListener(
                 new BACnetEID(2002)) {
 
             /**
              * Handles incoming message errors from the ASE.
              */
             @Override
-            public void onError(String arg0) {
+            public void onError(final String arg0) {
                 // TODO Auto-generated method stub
             }
 
@@ -491,8 +493,8 @@ Add the following code into the constructor of __Application2__ right below of _
              * Handles incoming messages from the ASE.
              */
             @Override
-            public void onIndication(T_UnitDataIndication arg0,
-                    Object context) {
+            public void onIndication(final T_UnitDataIndication arg0,
+                    final Object context) {
                 // TODO Auto-generated method stub
             }
         };
@@ -501,7 +503,7 @@ Add the following code into the constructor of __Application2__ right below of _
 Don't forget to add the two BACnet devices to the application's device list.
 
 ```java
-         // Add the two bacnetDevices to the device list of application2.
+        // Add the two bacnetDevices to the device list of application2.
         devices.add(bacnetDevice2001);
         devices.add(bacnetDevice2002);
 ```
@@ -534,13 +536,19 @@ import java.net.URI;
 
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
 import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
+import ch.fhnw.bacnetit.ase.application.service.api.ASEServices;
+import ch.fhnw.bacnetit.ase.application.service.api.BACnetEntityListener;
+import ch.fhnw.bacnetit.ase.application.service.api.ChannelConfiguration;
+import ch.fhnw.bacnetit.ase.application.service.api.ChannelFactory;
 import ch.fhnw.bacnetit.ase.application.transaction.api.*;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService;
-import ch.fhnw.bacnetit.ase.network.transport.api.*;
+import ch.fhnw.bacnetit.ase.transportbinding.service.api.ASEService;
 import ch.fhnw.bacnetit.directorybinding.dnssd.api.DNSSD;
+import ch.fhnw.bacnetit.transportbinding.api.BindingConfiguration;
+import ch.fhnw.bacnetit.transportbinding.api.ConnectionFactory;
+import ch.fhnw.bacnetit.transportbinding.api.TransportBindingInitializer;
 import ch.fhnw.bacnetit.transportbinding.ws.incoming.api.*;
 import ch.fhnw.bacnetit.transportbinding.ws.outgoing.api.*;
 ```
@@ -575,8 +583,8 @@ Cast the ChannelInterface to ChannelConfiguration, in this way you ensure a prop
         /*
          *********************** SETUP ASE 1 ***********************
          */
-        final Channel channel1 = ChannelFactory.getInstance();
-        final ChannelConfiguration channelConfiguration1 = channel1;
+        final ASEServices aseServicesChannel1 = ChannelFactory.getInstance();
+        final ChannelConfiguration channelConfiguration1 = aseServicesChannel1;
 ```
 Control Messages define a kind of discovery mechanism in BACnet/IT. Such control messages don't get handled by the ASE itself, therefore the BACnetEntityListener has to be implemented. Make sure to set the BACnetEntityListener in the ASE.
 
@@ -609,30 +617,30 @@ As mentioned, ASE needs one or several Transport Bindings to communicate.  In th
 
 ```java
 
-        // Configure the transport binding
+       // Configure the transport binding
         final ConnectionFactory connectionFactory1 = new ConnectionFactory();
         connectionFactory1.addConnectionClient("ws",
                 new WSConnectionClientFactory());
         int wsServerPort1 = 8080;
         connectionFactory1.addConnectionServer("ws",
                 new WSConnectionServerFactory(wsServerPort1));
+
+        BindingConfiguration bindingConfiguration1 = new TransportBindingInitializer();
+        bindingConfiguration1.initializeAndStart(connectionFactory1);
+        channelConfiguration1.setASEService((ASEService) bindingConfiguration1);
 ```
 
-At the end, initialize and start ASE1 by passing the prepared Connection Factory.
 
-```java
-channelConfiguration1.initializeAndStart(connectionFactory1);
-```
 
 Setup ASE2 in the same sense.  
 Note because both ASEs run on localhost we have to choose different ports.
 
 ```java
- /*
+        /*
          *********************** SETUP ASE 2 ***********************
          */
-        final Channel channel2 = ChannelFactory.getInstance();
-        final ChannelConfiguration channelConfiguration2 = channel2;
+        final ASEServices aseServicesChannel2 = ChannelFactory.getInstance();
+        final ChannelConfiguration channelConfiguration2 = aseServicesChannel2;
 
         // Configure BACnetEntity Listener to handle Control Messages
         final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
@@ -665,24 +673,31 @@ Note because both ASEs run on localhost we have to choose different ports.
         int wsServerPort2 = 9090;
         connectionFactory2.addConnectionServer("ws",
                 new WSConnectionServerFactory(wsServerPort2));
-        channelConfiguration2.initializeAndStart(connectionFactory2);
+
+        BindingConfiguration bindingConfiguration2 = new TransportBindingInitializer();
+        bindingConfiguration2.initializeAndStart(connectionFactory2);
+        channelConfiguration2.setASEService((ASEService) bindingConfiguration2);
 ```
 
 We already implemented the two Applications.  Remember both Applications extend AbstractApplication and handle incoming messages differently. In the following code the two applications get initialized. Remember further that both applications maintain their simulated BACnet devices in lists. We use these lists to iterate over all simulated BACnet devices of both applications and register the devices into the corresponding ASE.
 
 ```java
-          /*
-         *********************** Register BACnet devices from application 1 in ASE 1 ***********************
+        /*
+         *********************** Register BACnet devices from application 1 in ASE 1
+         * ***********************
          */
-        AbstractApplication application1 = new Application1(channel1);
+        AbstractApplication application1 = new Application1(
+                aseServicesChannel1);
         for (ChannelListener device : application1.devices) {
             channelConfiguration1.registerChannelListener(device);
         }
 
         /*
-         *********************** Register BACnet devices from application 2 in ASE 2 ***********************
+         *********************** Register BACnet devices from application 2 in ASE 2
+         * ***********************
          */
-        AbstractApplication application2 = new Application2(channel2);
+        AbstractApplication application2 = new Application2(
+                aseServicesChannel2);
         for (ChannelListener device : application2.devices) {
             channelConfiguration2.registerChannelListener(device);
         }
@@ -693,7 +708,7 @@ In this example we don't need a directory service because we provide the two des
 
 ```java
         /*
-         *********************** Initialize the Directory Service (not used in this example)
+         *********************** Initialize the directory service (not used in this example)
          */
         final DiscoveryConfig ds = new DiscoveryConfig("DNSSD", "1.1.1.1",
                 "itb.bacnet.ch.", "bds._sub._bacnet._tcp.",
@@ -702,7 +717,7 @@ In this example we don't need a directory service because we provide the two des
         try {
             DirectoryService.init();
             DirectoryService.getInstance().setDNSBinding(new DNSSD(ds));
-    
+
         } catch (final Exception e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -715,17 +730,18 @@ Now let the devices communicate between each other.
 In the first communication attempt BACnet device 1001 from application1 sends a ReadPropertyRequest to BACnet device 2001 from application2. Device 2001 confirms the message with a ReadPropertyAck containing "the value" of application2. To get the correct representation of a ReadPropertyRequest and a ReadPropertyAck, BACnet4J is used.
 
 ```java
- /*
+        /*
          *********************** Enforce Application1 to send a ReadPropertyRequest to Application2.
          * Application2 answers with its "value". To represent the
          * ReadPropertyRequest and the ReadPropertyAck BACnet4J is
          * used.***********************
          */
         try {
-            System.out.println("Applicatio1 sends a ReadPropRequest to Application2");
+            System.out.println(
+                    "Applicatio1 sends a ReadPropRequest to Application2");
             application1.sendReadPropertyRequestUsingBACnet4j(
-                    new URI("ws://localhost:"+wsServerPort2), new BACnetEID(1001),
-                    new BACnetEID(2001));
+                    new URI("ws://localhost:" + wsServerPort2),
+                    new BACnetEID(1001), new BACnetEID(2001));
         } catch (Exception e) {
             System.err.print(e);
         }
@@ -741,29 +757,32 @@ In the first communication attempt BACnet device 1001 from application1 sends a 
 In the second communication attempt we renounce of BACnet4J. We let device 2001 from application2 send a WhoIsRequest to device 1001 from application1. Device 1001 answers with an IAmRequest. We provide a valid representation for both messages (WhoIsRequest and IAmRequest) as a given byte array. This example shows the independece of the new BACnet/IT stack with existing BACnet applications.
 
 ```java
-/*
+        /*
          *********************** Enforce Application2 to send a WhoIsRequest to Application1.
          * Application1 answers with an IAmRequest. To represent both BACnet
-         * services (WhoIsRequest and IAmRequest)  a byte stream is provided.
+         * services (WhoIsRequest and IAmRequest) a byte stream is provided.
          * Therefore BACnet4J is not needed.
          *
          */
-        
+
         // Represent a WhoIsRequest as byte array
-        byte[] whoIsRequest = new byte[]{(byte)0x1e,(byte)0x8e,(byte)0x8f,(byte)0x1f};
-        try{
-            System.out.println("Applicatio2 sends a WhoIsRequest to Application1");
-            application2.sendBACnetMessage(new URI("ws://localhost:"+wsServerPort1), new BACnetEID(2001), new BACnetEID(1001), 
-                    whoIsRequest);
-        }catch(Exception e){
+        byte[] whoIsRequest = new byte[] { (byte) 0x1e, (byte) 0x8e,
+                (byte) 0x8f, (byte) 0x1f };
+        try {
+            System.out.println(
+                    "Applicatio2 sends a WhoIsRequest to Application1");
+            application2.sendBACnetMessage(
+                    new URI("ws://localhost:" + wsServerPort1),
+                    new BACnetEID(2001), new BACnetEID(1001), whoIsRequest);
+        } catch (Exception e) {
             System.out.println(e);
         }
-        
-        
+
         // Wait until close
-        try{
+        try {
             System.in.read();
-        }catch(Exception e){}
+        } catch (Exception e) {
+        }
 
 ```
 
@@ -806,9 +825,9 @@ import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.TPDU;
@@ -821,6 +840,7 @@ import ch.fhnw.bacnetit.samplesandtests.api.encoding.asdu.IncomingRequestParser;
 import ch.fhnw.bacnetit.samplesandtests.api.encoding.type.constructed.ServicesSupported;
 import ch.fhnw.bacnetit.samplesandtests.api.encoding.util.ByteQueue;
 import ch.fhnw.bacnetit.samplesandtests.api.service.confirmed.ReadPropertyRequest;
+
 
 /**
  * AbstractApplication provides base functionality
@@ -861,7 +881,7 @@ public abstract class AbstractApplication {
         final TPDU tpdu = new TPDU(from, to,
                 byteQueue.popAll());
 
-        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, true, null);
+        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, null);
 
         applicationService.doRequest(unitDataRequest);
 
@@ -879,7 +899,7 @@ public abstract class AbstractApplication {
         final TPDU tpdu = new TPDU(from, to,
                 confirmedBacnetMessage);
 
-        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, true, null);
+        final T_UnitDataRequest unitDataRequest = new T_UnitDataRequest(destination, tpdu, 1, null);
 
         applicationService.doRequest(unitDataRequest);
     }
@@ -909,7 +929,6 @@ public abstract class AbstractApplication {
     }
 
 }
-
 ```
 
 ### __Complete Code of Application1.java__
@@ -919,9 +938,9 @@ public abstract class AbstractApplication {
 // Import Java components
 import java.net.URI;
 
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
@@ -929,6 +948,7 @@ import ch.fhnw.bacnetit.samplesandtests.api.encoding.asdu.ASDU;
 import ch.fhnw.bacnetit.samplesandtests.api.encoding.asdu.ComplexACK;
 import ch.fhnw.bacnetit.samplesandtests.api.encoding.asdu.UnconfirmedRequest;
 import ch.fhnw.bacnetit.samplesandtests.api.service.unconfirmed.WhoIsRequest;
+
 
 /**
  * Simulating a BACnet/IT application using the ApplicationService interface
@@ -1037,7 +1057,6 @@ public class Application1 extends AbstractApplication {
 
 }
 
-
 ```
 
 ### __Complete Code of Application2.java__
@@ -1048,9 +1067,9 @@ public class Application1 extends AbstractApplication {
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.transaction.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
@@ -1174,7 +1193,6 @@ public class Application2 extends AbstractApplication {
 
 }
 
-
 ```
 
 ### __Complete Code of Configurator.java__
@@ -1186,13 +1204,19 @@ import java.net.URI;
 
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
-import ch.fhnw.bacnetit.ase.application.api.BACnetEntityListener;
 import ch.fhnw.bacnetit.ase.application.configuration.api.DiscoveryConfig;
+import ch.fhnw.bacnetit.ase.application.service.api.ASEServices;
+import ch.fhnw.bacnetit.ase.application.service.api.BACnetEntityListener;
+import ch.fhnw.bacnetit.ase.application.service.api.ChannelConfiguration;
+import ch.fhnw.bacnetit.ase.application.service.api.ChannelFactory;
 import ch.fhnw.bacnetit.ase.application.transaction.api.*;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.network.directory.api.DirectoryService;
-import ch.fhnw.bacnetit.ase.network.transport.api.*;
+import ch.fhnw.bacnetit.ase.transportbinding.service.api.ASEService;
 import ch.fhnw.bacnetit.directorybinding.dnssd.api.DNSSD;
+import ch.fhnw.bacnetit.transportbinding.api.BindingConfiguration;
+import ch.fhnw.bacnetit.transportbinding.api.ConnectionFactory;
+import ch.fhnw.bacnetit.transportbinding.api.TransportBindingInitializer;
 import ch.fhnw.bacnetit.transportbinding.ws.incoming.api.*;
 import ch.fhnw.bacnetit.transportbinding.ws.outgoing.api.*;
 
@@ -1203,8 +1227,8 @@ public class Configurator {
         /*
          *********************** SETUP ASE 1 ***********************
          */
-        final Channel channel1 = ChannelFactory.getInstance();
-        final ChannelConfiguration channelConfiguration1 = channel1;
+        final ASEServices aseServicesChannel1 = ChannelFactory.getInstance();
+        final ChannelConfiguration channelConfiguration1 = aseServicesChannel1;
 
         // Configure BACnetEntity Listener to handle Control Messages
         final BACnetEntityListener bacNetEntityHandler1 = new BACnetEntityListener() {
@@ -1230,6 +1254,7 @@ public class Configurator {
 
         channelConfiguration1.setEntityListener(bacNetEntityHandler1);
 
+
         // Configure the transport binding
         final ConnectionFactory connectionFactory1 = new ConnectionFactory();
         connectionFactory1.addConnectionClient("ws",
@@ -1237,13 +1262,17 @@ public class Configurator {
         int wsServerPort1 = 8080;
         connectionFactory1.addConnectionServer("ws",
                 new WSConnectionServerFactory(wsServerPort1));
-        channelConfiguration1.initializeAndStart(connectionFactory1);
+        
+        BindingConfiguration bindingConfiguration1 = new TransportBindingInitializer();
+        bindingConfiguration1.initializeAndStart(connectionFactory1);
+        channelConfiguration1.setASEService((ASEService) bindingConfiguration1);
+
 
         /*
          *********************** SETUP ASE 2 ***********************
          */
-        final Channel channel2 = ChannelFactory.getInstance();
-        final ChannelConfiguration channelConfiguration2 = channel2;
+        final ASEServices aseServicesChannel2 = ChannelFactory.getInstance();
+        final ChannelConfiguration channelConfiguration2 = aseServicesChannel2;
 
         // Configure BACnetEntity Listener to handle Control Messages
         final BACnetEntityListener bacNetEntityHandler2 = new BACnetEntityListener() {
@@ -1276,12 +1305,16 @@ public class Configurator {
         int wsServerPort2 = 9090;
         connectionFactory2.addConnectionServer("ws",
                 new WSConnectionServerFactory(wsServerPort2));
-        channelConfiguration2.initializeAndStart(connectionFactory2);
+        
+        BindingConfiguration bindingConfiguration2 = new TransportBindingInitializer();
+        bindingConfiguration2.initializeAndStart(connectionFactory2);
+        channelConfiguration2.setASEService((ASEService) bindingConfiguration2);
+
 
         /*
          *********************** Register BACnet devices from application 1 in ASE 1 ***********************
          */
-        AbstractApplication application1 = new Application1(channel1);
+        AbstractApplication application1 = new Application1(aseServicesChannel1);
         for (ChannelListener device : application1.devices) {
             channelConfiguration1.registerChannelListener(device);
         }
@@ -1289,7 +1322,7 @@ public class Configurator {
         /*
          *********************** Register BACnet devices from application 2 in ASE 2 ***********************
          */
-        AbstractApplication application2 = new Application2(channel2);
+        AbstractApplication application2 = new Application2(aseServicesChannel2);
         for (ChannelListener device : application2.devices) {
             channelConfiguration2.registerChannelListener(device);
         }
