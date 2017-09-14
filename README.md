@@ -38,13 +38,13 @@ The __configurator__ has four fundamental tasks:
 As mentioned in configurator task 4, after the setup, we let device 1001 (yellow) communicate with device 2001 (green) and vice versa.
 
 
-Note the two interfaces __ApplicationService__ and __ChannelConfiguration__ and note the two basic rules:  
-1. The Applications's view of ASE is ApplicationService.  
-2. The Configurator's view of ASE is ChannelConfiguration.
+Note the three interfaces __ApplicationService__, __ChannelConfiguration__ and __TransportBindingService__.  
+1. The Applications's view of ASE is __ApplicationService__.  
+2. The Configurator's view of ASE is __ChannelConfiguration__.  
+3. The TransportBinding's view of ASE is __TransportBindingService__.
 
 And the last point before we start:  
-All the provided classes you need to develop applications, as well as this demo setup, are packed into "api" java packages.  
-Thus, ensure that all your imported classes that consider components of the BACnet/IT libraries are within an api package.
+All the provided classes you need to develop applications, as well as this demo setup, are packed into "api" java packages. Therefore, ensure that all your imported classes of the BACnet/IT libraries are within an api package.
 
 __With this information in mind, let us start and build our first BACnet/IT application!__
 
