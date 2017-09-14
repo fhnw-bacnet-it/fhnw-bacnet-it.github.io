@@ -9,7 +9,7 @@ __In this tutorial you will learn how to develop applications using our new BACn
 ## Content
 [What we do](#what-we-do)  
 [Download Binaries and Prerequisites](page_content/2_download/README.md)  
-[Create a Demo Applicaton without Directory Service](page_content/3_demo_app_no_directory/README.md)  
+[Create a Demo Application without Directory Service](page_content/3_demo_app_no_directory/README.md)  
 [Create a Demo Application using the Directory Service](page_content/4_demo_app_directory/README.md)  
 [Build from source](page_content/5_build/README.md)  
 [Required changes for a distributed setup](page_content/6_distributed_setup/README.md)

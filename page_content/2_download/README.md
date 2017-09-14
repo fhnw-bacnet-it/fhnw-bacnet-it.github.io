@@ -42,4 +42,4 @@ As an alternative [build the JARs from source](../5_build/README.md) .
 <img src="../images/selectJars.png" width="400px">
 
 
-[Go to Create a Demo Applicaton without Directory Service](../3_demo_app_no_directory/README.md)  
+[Go to Create a Demo Application without Directory Service](../3_demo_app_no_directory/README.md)  
