@@ -26,10 +26,10 @@ The next section describes the structure of the four classes in detail.
 __AbstractApplication__ is an abstract class that provides base functionality for applications.
 Our two applications will extend __AbstractApplication__.
 
-So, the first step is to create an abstract java class __AbstractApplication__.
+The first step is to create an abstract java class __AbstractApplication__.
 
 Make sure to import the following classes.  
- __Note that by convention just classes within an api package should be used!__
+ __Note that by convention only classes within an api package should be imported!__
 
 ```java
 // Make sure to import the following classes
@@ -39,9 +39,9 @@ import java.net.URISyntaxException;
 import java.util.LinkedList;
 import java.util.List;
 
-import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.TPDU;
@@ -60,7 +60,7 @@ The following code shows the class structure, the essential instance variables a
 
 Note the following:  
 - __ApplicationService__ is the application's view to the __ASE__ and will be passed from the __Configurator__ class.  
-- Each application maintains a list with simulated BACnet devices.
+- Each application maintains a list with simulated BACnet devices. A BACnet device should extend the ChannelListener class.
 
 
 ```java
@@ -116,7 +116,7 @@ Add the following method to class __AbstractApplication__.
 ```
 
 
-There is no need to use BACnet4J to build BACnet services.  Feel free to provide any BACnet services as byte arrays.  
+There is no need to use [BACnet4J](https://github.com/empeeoh/BACnet4J) to build BACnet services.  Feel free to provide any BACnet services as byte arrays.  
 Later in this example we'll send WhoIs- and IAmRequest services between devices, both services are given as valid byte arrays. Add the following method to class __AbstractApplication__.
 
 
@@ -190,9 +190,9 @@ Make sure to import the following classes.
 // Import Java components
 import java.net.URI;
 
-import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
@@ -202,8 +202,8 @@ import ch.fhnw.bacnetit.samplesandtests.api.encoding.asdu.UnconfirmedRequest;
 import ch.fhnw.bacnetit.samplesandtests.api.service.unconfirmed.WhoIsRequest;
 ```  
 
-Let __Application1__ extends __AbstractApplication__ to inherit base functionality.
-__ApplicationService__ will be passed from the __Configurator__. Make sure to invoke __AbstractApplication__'s constructor
+__Application1__ extends __AbstractApplication__ to inherit base functionality.
+__ApplicationService__ is passed from the __Configurator__. Make sure to invoke __AbstractApplication__'s constructor
 and pass the ApplicationService instance to it.
 The following code shows the main class structure with the constructor.
 
@@ -220,8 +220,7 @@ public class Application1 extends AbstractApplication {
     /**
      * Constructor of class Application1
      * 
-     * @param applicationService,
-     *            the applicationService gets passed from the Configurator.
+     * @param applicationService, the applicationService is passed from the Configurator.
      */
     public Application1(ApplicationService applicationService) {
         super(applicationService);
@@ -232,7 +231,7 @@ public class Application1 extends AbstractApplication {
 ``` 
 
 
-A BACnet device gets simulated by using __ChannelListener__.
+A BACnet device is simulated by using __ChannelListener__.
 The following code shows how __Application1__ implements two BACnet devices (BACnetEID 1001 and 1002).
 A BACnet device (an implementation of __ChannelListener__) must handle incoming BACnet messages, you can define the behaviour by adjusting the 
 __public void onIndication(T_UnitDataIndication arg0, Object context)__ method.  
@@ -346,9 +345,9 @@ Make sure to import the following classes.
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 // Import packages from the BACnet/IT opensource projects
 // By convention just classes within an api package should be used
+import ch.fhnw.bacnetit.ase.application.service.api.ApplicationService;
 import ch.fhnw.bacnetit.ase.application.transaction.api.ChannelListener;
 import ch.fhnw.bacnetit.ase.encoding.api.BACnetEID;
 import ch.fhnw.bacnetit.ase.encoding.api.T_UnitDataIndication;
@@ -512,11 +511,11 @@ Great, you are done with the implementation of class __Application2__.
 ### __Implement Configurator.java__ 
 
 The Configurator has the following tasks:  
-- Java entry point of the example demo.  
+- Java entry point of the demo application.  
 - Initialization of essential BACnet/IT components (e.g. Directory Service).  
 - Definition of the available Transport Bindings.  
-- Linking between Application1 and ASE1, as well as between Application2 and ASE2.  
-- Linking between Transport Bindings and the ASEs.  
+- Linking Application1 and ASE1, as well as Application2 and ASE2.  
+- Linking the Transport Bindings and the ASEs.  
 - Triggers some communication between simulated BACnet devices.  
 
 Note the following sequence diagram to understand better about the __Configurator__ tasks.  
@@ -553,10 +552,9 @@ import ch.fhnw.bacnetit.transportbinding.ws.incoming.api.*;
 import ch.fhnw.bacnetit.transportbinding.ws.outgoing.api.*;
 ```
 
-The __Configurator__ class contains the main() method only.  
+The __Configurator__ class contains the __main()__ method only.  
 Lets go trough the steps one by one.
-
-In this tutorial two ASEs get simulated, both running on localhost (port 8080 and 9090).  
+In this tutorial two ASEs are simulated, both running on localhost (port 8080 and 9090).  
 Both ASEs simulate each two BACnet devices.  
 An ASE needs one or several Transport Bindings to communicate (e.g. http or websocket).  
 
@@ -575,8 +573,8 @@ public class Configurator {
 Add the following codes right into the __main()__ method of class __Configurator__.
 
 
-Use the ChannelFactory to get access to ASE in a proper way.  
-Cast the ChannelInterface to ChannelConfiguration, in this way you ensure a proper and limited view to ASE functionality-
+Use the ChannelFactory to get access to ASE in a proper way. (By using the interface __ASEServices__).  
+Cast __ASEServices__ to __ChannelConfiguration__, in this way you ensure a proper and limited view to ASE functionality. Note that the interface __ASEServices__ extends three interfaces: __ChannelConfiguration__, __ApplicationService__, and __TransportBindingService__.
 
 ```java
 
@@ -586,7 +584,7 @@ Cast the ChannelInterface to ChannelConfiguration, in this way you ensure a prop
         final ASEServices aseServicesChannel1 = ChannelFactory.getInstance();
         final ChannelConfiguration channelConfiguration1 = aseServicesChannel1;
 ```
-Control Messages define a kind of discovery mechanism in BACnet/IT. Such control messages don't get handled by the ASE itself, therefore the BACnetEntityListener has to be implemented. Make sure to set the BACnetEntityListener in the ASE.
+Control Messages define a kind of discovery mechanism in BACnet/IT. Such control messages aren't handled by the ASE itself, therefore the __BACnetEntityListener__ interface has to be implemented. Make sure to announce __BACnetEntityListener__ in the ASE.
 
 ```java
         // Configure BACnetEntity Listener to handle Control Messages
@@ -613,10 +611,9 @@ Control Messages define a kind of discovery mechanism in BACnet/IT. Such control
 
         channelConfiguration1.setEntityListener(bacNetEntityHandler1);
 ```
-As mentioned, ASE needs one or several Transport Bindings to communicate.  In this example WebSocket is used for incoming and outgoing messages. The following code shows how you add the WebSocket binding for incoming and outgoing messages.
+As mentioned, ASE needs one or several transport bindings to communicate with other stacks.  In this example WebSocket is used for incoming and outgoing messages. The following code shows how you add the WebSocket binding for incoming and outgoing messages.
 
 ```java
-
        // Configure the transport binding
         final ConnectionFactory connectionFactory1 = new ConnectionFactory();
         connectionFactory1.addConnectionClient("ws",
@@ -632,7 +629,7 @@ As mentioned, ASE needs one or several Transport Bindings to communicate.  In th
 
 
 
-Setup ASE2 in the same sense.  
+Setup ASE2 in the same way.  
 Note because both ASEs run on localhost we have to choose different ports.
 
 ```java
@@ -679,7 +676,7 @@ Note because both ASEs run on localhost we have to choose different ports.
         channelConfiguration2.setASEService((ASEService) bindingConfiguration2);
 ```
 
-We already implemented the two Applications.  Remember both Applications extend AbstractApplication and handle incoming messages differently. In the following code the two applications get initialized. Remember further that both applications maintain their simulated BACnet devices in lists. We use these lists to iterate over all simulated BACnet devices of both applications and register the devices into the corresponding ASE.
+We already implemented two applications.  Remember both applications extend __AbstractApplication__ and handle incoming messages differently. In the following code the two applications are initialized. Remember further, that both applications maintain their simulated BACnet devices in lists. We use these lists to iterate over all simulated BACnet devices of both applications and register the devices into the corresponding ASE.
 
 ```java
         /*
